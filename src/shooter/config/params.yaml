@@ -1,0 +1,22 @@
+pointer:
+ rotation_speed: 100 #CCRの値
+ #md_addr: 0x20 #MDのアドレス
+
+roller:
+ rotation_speed: 110 #unit: rad/s
+ #kp: 0.1
+ #ki: 0.1
+ #kd: 0.1
+ #enc_resol: 1024
+ up_down_speed: 200 #CCRの値
+ #md_roller_addrs: [0x21, 0x22] #ローラー側のMDのアドレス
+ #md_updown_addr: 0x23 #首振り機構側のMDのアドレス
+
+loader:
+ #unit: deg
+ lever1_angle_open: 60
+ lever1_angle_close: 0
+ lever2_angle_open: 60
+ lever2_angle_close: 0
+ lever3_angle_open: 55
+ lever3_angle_close: 15

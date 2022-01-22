@@ -1,0 +1,2 @@
+int32 rot_vel_motor_roller1
+int32 rot_vel_motor_roller2
