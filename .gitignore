@@ -3,5 +3,4 @@
 /logs/
 /.catkin_tools/
 /Inc/
-/arduino_codes/
 /src/rosserial_stm32/
