@@ -1,0 +1,33 @@
+pointer:
+ rotation_speed: 120 #CCRの値
+ #md_addr: 0x20 #MDのアドレス
+
+roller:
+ #rotation_speed: 110 #unit: rad/s
+ #rotation_speed: 6302 #unit: deg/s
+ rotation_speed: 600 #unit: deg/s
+ #kp: 0.1
+ #ki: 0.1
+ #kd: 0.1
+ #enc_resol: 1024
+ up_down_speed: 200 #CCRの値
+ #md_roller_addrs: [0x21, 0x22] #ローラー側のMDのアドレス
+ #md_updown_addr: 0x23 #首振り機構側のMDのアドレス
+
+loader:
+ #unit: deg
+ #Arduinoの電源が入った時の装填機構の位置が0 degになる
+ servo_r_angle_push: 30
+ servo_r_angle_reset: 90
+ servo_l_angle_push: 120
+ servo_l_angle_reset: 60
+ motor_angle_load: 120
+ motor_angle_init: -5
+
+lift:
+#unit: deg
+#Arduinoの電源が入った時の昇降機構の位置が0 degになる
+ motor_bottom_angle: -50
+ motor_middle_angle: -6000
+ motor_top_angle: -10000
+ updown_speed: 250

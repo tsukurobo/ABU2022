@@ -1,0 +1,11 @@
+<launch>
+    <rosparam command="load" file="$(find shooter)/config/params2.yaml"/>
+    <node name="shooter_ros" type="shooter_node2" pkg="shooter" output="screen"/>
+    <node name="arduino_mega" type="serial_node.py" pkg="rosserial_python" output="screen">
+        <param name="port" value="/dev/ttyACM0" />
+        <param name="baud" value="250000" />
+    </node>
+    <node name="elecom_gamepad" type="joy_node" pkg="joy" output="screen">
+        <param name="coalesce_interval" value="0.01" />
+    </node>
+</launch>
