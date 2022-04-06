@@ -1,2 +1,3 @@
-int32 rot_vel_motor_roller1
-int32 rot_vel_motor_roller2
+int32 lift_motor_angle
+int32 load_motor_angle
+bool lift_motor_sw
