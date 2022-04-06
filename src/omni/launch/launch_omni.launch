@@ -1,0 +1,11 @@
+<launch>
+    <rosparam command="load" file="$(find omni)/config/params.yaml"/>
+    <node name="omni_commander" type="omni_commander" pkg="omni" output="screen"/>
+
+    <node name="nucleo_f446re" type="serial_node.py" pkg="rosserial_python" output="screen">
+        <param name="port" value="/dev/ttyACM0" />
+        <param name="baud" value="112500" />
+    </node>
+
+    <node name="elecom_gamepad" type="joy_node" pkg="joy" output="screen"/>
+</launch>

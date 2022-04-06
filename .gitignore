@@ -1,0 +1,8 @@
+/build/
+/devel/
+/logs/
+/.catkin_tools/
+/arduino_codes/
+/omni_data/
+/src/disc/
+/src/shooter/

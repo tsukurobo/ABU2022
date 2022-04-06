@@ -1,0 +1,42 @@
+scanmatch:
+ #ndt_filepath: "/home/robosa/abu2022/src/autonomous_driving/data/ndt_corridor_32x32.txt"
+ ndt_filepath: "/home/robosa/abu2022/src/autonomous_driving/data/ndt.txt"
+ #grid_num: 1024
+ grid_num: 400
+ #grid_col_num: 32
+ grid_col_num: 20
+ scan_data_skip_num: 4
+ scan_skip_num: 1
+ #grid_size: 1.6
+ grid_size: 1.0
+ #lidar_pos: [0.13, -0.2, -1.3963]
+ #lidar_pos: [-0.49, -0.075, 3.1415]
+ lidar_pos_x: -0.49
+ lidar_pos_y: -0.075
+ lidar_pos_th: 3.1415
+ criteria_eps: 0.01
+ criteria_n: 5
+ #init_pos_x: 20.4
+ #init_pos_y: 20.4
+ #init_pos_th: 0.181
+ init_pos_x: 5.013
+ init_pos_y: 8.544
+ init_pos_th: 1.57
+
+odom:
+ alpha_xy: 1.0
+ alpha_th: 1.0
+
+pure_pursuit:
+ path1: "/home/robosa/abu2022/src/autonomous_driving/data/test.csv"
+ path2: "/home/robosa/abu2022/src/autonomous_driving/data/test_inverse.csv"
+ cmd_topic_name: "cmd"
+ control_loop_period: 0.02 #50 Hz
+ ahead_num: 2
+ yaw_pid_kp: 2.0
+ yaw_pid_ki: 0.05
+ yaw_pid_max_val: 3.14
+ pos_pid_kp: 2.0
+ pos_pid_ki: 0.05
+ pos_pid_max_val: 0.5
+ pos_pid_eps: 0.01

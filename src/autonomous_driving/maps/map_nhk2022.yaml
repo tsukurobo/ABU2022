@@ -1,0 +1,8 @@
+image: map_nhk2022.png
+resolution: 0.05000
+#origin: [-20.492502, -20.492502, 0.000000]
+origin: [0, 0, 0]
+negate: 0
+occupied_thresh: 0.6
+free_thresh: 0.2
+

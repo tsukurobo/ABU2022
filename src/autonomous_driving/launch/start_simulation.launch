@@ -1,0 +1,19 @@
+<launch>
+
+    <rosparam command="load" file="$(find autonomous_driving)/params/autonomous_driving_params.yaml"/>
+
+    <node name="elecom_gamepad" type="joy_node" pkg="joy" output="screen"/>
+
+    <node name="map_server" type="map_server" pkg="map_server" output="screen" args="$(find autonomous_driving)/maps/map_nhk2022.yaml"/>
+
+    <node name="tracking_controller" type="tracking_controller" pkg="autonomous_driving" output="screen"/>
+
+    <node name="virtual_omni" type="virtual_omni.py" pkg="autonomous_driving" />
+    
+    <!--<node name="odom_pubulisher" type="odom_publisher" pkg="autonomous_driving" />-->
+
+    <node name="path_tracker" type="pure_pursuit_tracker" pkg="autonomous_driving" output="screen"/>
+
+    <node name="rviz" type="rviz" pkg="rviz" args="-d /home/robosa/rviz/my_layout.rviz"/>
+
+</launch>

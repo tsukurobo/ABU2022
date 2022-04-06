@@ -1,0 +1,33 @@
+<launch>
+    <arg name="CollectData" value="True"/>
+    <arg name="Simulation" value="False"/>
+
+    <rosparam command="load" file="$(find autonomous_driving)/params/autonomous_driving_params.yaml.yaml"/>
+    <rosparam command="load" file="$(find omni)/config/params.yaml"/>
+
+    <group if="$(arg CollectData)">
+        <node name="elecom_gamepad" type="joy_node" pkg="joy" output="screen"/>
+
+        <node name="omni_commander" type="omni_commander" pkg="omni" output="screen"/>
+
+        <node name="nucleo_f446re" type="serial_node.py" pkg="rosserial_python" output="screen">
+            <param name="port" value="/dev/ttyACM0"/>
+            <param name="baud" value="250000" />
+        </node>
+
+        <node name="urg" type="urg_node" pkg="urg_node">
+            <param name="ip_address" value="172.16.0.10"/>
+            <param name="frame_id" value="laser"/>
+            <param name="angle_man" value="0.785375"/>
+        </node>
+    </group>
+
+    <group if="$(arg Simulaiton)">
+        <node name="map_server" type="map_server" pkg="map_server" output="screen" args="$(find autonomous_driving)/maps/map_corridor.yaml"/>
+
+        <node name="odom_pubulisher" type="odom_publisher" pkg="autonomous_driving" />
+        
+        <node name="scanmatcher" type="ndt_scanmatcher" pkg="autonomous_driving" output="screen"/>
+    </group>
+
+</launch>
