@@ -40,7 +40,7 @@ namespace JCU4113S
 void joyCallback(const sensor_msgs::Joy &joyMsg)
 {
     using namespace JCU4113S;
-    ROS_INFO("Call back");
+    //ROS_INFO("Call back");
 
     //移動命令
     if (joyMsg.buttons[LB] == false && joyMsg.buttons[LT] == false)
@@ -149,11 +149,15 @@ void joyCallback(const sensor_msgs::Joy &joyMsg)
             {
                 pubDiskCatchingCommand.data[0] = 1;
                 pubDiskCatchingCommand.data[1] = 2;
+            pubLiftingCommand.data[0]=5;
+            pubLiftingCommand.data[1]=2;
             }
             else if (joyMsg.buttons[THREE])
             {
                 pubDiskCatchingCommand.data[0] = 1;
                 pubDiskCatchingCommand.data[1] = 1;
+            pubLiftingCommand.data[0]=5;
+            pubLiftingCommand.data[1]=1;
             }
         }
         if (joyMsg.buttons[LT])
@@ -183,17 +187,24 @@ void joyCallback(const sensor_msgs::Joy &joyMsg)
         {
             pubDiskCatchingCommand.data[0] = 0;
             pubDiskCatchingCommand.data[1] = 1;
+            pubLiftingCommand.data[0]=4;
+            pubLiftingCommand.data[1]=1;
+            
         }
         // else if (joyMsg.axes[CROSS_LR] < 0.0)
         else if (joyMsg.buttons[FOUR])
         {
             pubDiskCatchingCommand.data[0] = 0;
             pubDiskCatchingCommand.data[1] = 2;
+            pubLiftingCommand.data[0]=4;
+            pubLiftingCommand.data[1]=2;
         }
         else if (ifPrevDiskAir)
         {
             pubDiskCatchingCommand.data[0] = 0;
             pubDiskCatchingCommand.data[1] = 0;
+            pubLiftingCommand.data[0]=4;
+            pubLiftingCommand.data[1]=0;
         }
         ifPrevDiskAir = (pubDiskCatchingCommand.data[0] == 0 && !ifPrevDiskAir);
         // prevCrossLR = joyMsg.axes[CROSS_LR];
@@ -221,7 +232,7 @@ int main(int argc, char **argv)
     diskCatchingPub = nh.advertise<std_msgs::Int16MultiArray>("catchDisk", 1000);
     sub = nh.subscribe("joy", 1000, joyCallback);
 
-    ros::Rate loop_rate(500);
+    ros::Rate loop_rate(50);
     while (ros::ok())
     {
         ros::spinOnce();
@@ -229,10 +240,12 @@ int main(int argc, char **argv)
         if (pubLiftingCommand.data[0] != prePubLiftingCommand.data[0] || pubLiftingCommand.data[1] != prePubLiftingCommand.data[1] || pubLiftingCommand.data[2] != prePubLiftingCommand.data[2] /* || (ifPrevAutomation && pubLiftingCommand.data[0] == 1 && pubLiftingCommand.data[1] == -1) */)
         {
             diskLiftingPub.publish(pubLiftingCommand);
+            diskLiftingPub.publish(pubLiftingCommand);
             prePubLiftingCommand = pubLiftingCommand;
         }
         if (pubDiskCatchingCommand.data[0] != prePubDiskCatchingCommand.data[0] || pubDiskCatchingCommand.data[1] != prePubDiskCatchingCommand.data[1])
         {
+            diskCatchingPub.publish(pubDiskCatchingCommand);
             diskCatchingPub.publish(pubDiskCatchingCommand);
             prePubDiskCatchingCommand = pubDiskCatchingCommand;
         }

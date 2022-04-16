@@ -1,6 +1,7 @@
 <launch>
     <arg name="omni"        default="true"/>
-    <arg name="disc"        default="true"/>
+    <arg name="disc"        default="false"/>
+    <arg name="ball_handler"        default="true"/>
 
     <node name="elecom_gamepad" type="joy_node" pkg="joy" output="screen"/>
 
@@ -20,8 +21,22 @@
         </node>
         <node name="lifting_disk_node" pkg="lifting_disks_joy_sub" type="lifting_disks_joy_sub_node"/>
         
-        <node name="serial_node1" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM1" output="screen"></node>
-        <node name="serial_node2" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM2" output="screen"></node> 
+        <node name="serial_node1" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM1" output="screen">
+            <param name="baud" value="115200" />
+        </node>
+        <node name="serial_node2" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM2" output="screen">
+            <param name="baud" value="115200" />
+        </node> 
+    </group>
+
+    <group if="$(arg ball_handler)">
+        <rosparam command="load" file="$(find ball_handler)/config/params.yaml"/>
+        <node name="ball_handler" type="ball_handler_node" pkg="ball_handler" output="screen"/>
+        
+        <node name="ball_handler_arduino" type="serial_node.py" pkg="rosserial_python" output="screen">
+            <param name="port" value="/dev/ttyACM1"/>
+            <param name="baud" value="250000" />
+        </node>
     </group>
 
 </launch>
