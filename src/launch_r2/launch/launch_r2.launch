@@ -1,7 +1,7 @@
 <launch>
-    <arg name="omni"        default="true"/>
-    <arg name="disc"        default="false"/>
-    <arg name="ball_handler"        default="true"/>
+    <arg name="omni"        default="false"/>
+    <arg name="disc"        default="true"/>
+    <arg name="ball_handler"        default="false"/>
 
     <node name="elecom_gamepad" type="joy_node" pkg="joy" output="screen"/>
 
@@ -19,14 +19,14 @@
         <node name="disc_catch" pkg="disc" type="disc_catch" required="true">
             <param name="MAXPWM" value="255"/>
         </node>
-        <node name="lifting_disk_node" pkg="lifting_disks_joy_sub" type="lifting_disks_joy_sub_node"/>
+        <node name="lifting_disk_node" pkg="lifting_disks_joy_sub" type="lifting_disks_joy_sub_node" output="screen" />
         
-        <node name="serial_node1" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM1" output="screen">
+        <node name="serial_node1" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM2" output="screen">
             <param name="baud" value="115200" />
         </node>
-        <node name="serial_node2" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM2" output="screen">
+        <!--<node name="serial_node2" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM2" output="screen">
             <param name="baud" value="115200" />
-        </node> 
+        </node> -->
     </group>
 
     <group if="$(arg ball_handler)">

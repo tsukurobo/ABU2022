@@ -4,6 +4,8 @@
 
 Air::Air(int pinL, int pinR) : pinL(pinL), pinR(pinR)
 {
+    pinMode(pinL, OUTPUT);
+    pinMode(pinR, OUTPUT);
 }
 void Air::setState(const int &newState)
 {

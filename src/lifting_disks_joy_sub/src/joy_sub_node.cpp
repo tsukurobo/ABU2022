@@ -3,14 +3,14 @@
 #include "std_msgs/Int16MultiArray.h"
 
 ros::Publisher diskLiftingPub;
-ros::Publisher diskCatchingPub;
+//ros::Publisher diskCatchingPub;
 ros::Subscriber sub;
 
 std_msgs::Int16MultiArray pubLiftingCommand;
 std_msgs::Int16MultiArray prePubLiftingCommand;
 
-std_msgs::Int16MultiArray pubDiskCatchingCommand;
-std_msgs::Int16MultiArray prePubDiskCatchingCommand;
+// std_msgs::Int16MultiArray pubDiskCatchingCommand;
+// std_msgs::Int16MultiArray prePubDiskCatchingCommand;
 
 float prevCrossTB = 0;
 float prevCrossLR = 0;
@@ -46,41 +46,59 @@ void joyCallback(const sensor_msgs::Joy &joyMsg)
     if (joyMsg.buttons[LB] == false && joyMsg.buttons[LT] == false)
     {
         ROS_INFO("L buttons are not pressed.");
-        if (joyMsg.buttons[ONE])
+        // if (joyMsg.buttons[ONE])
+        // {
+        //     // 100[mm]
+        //     pubLiftingCommand.data[0] = 1;
+        //     pubLiftingCommand.data[1] = (joyMsg.buttons[RB] ? 4 : 0);
+        //     ROS_INFO("Auto movement");
+        // }
+        // else if (joyMsg.buttons[TWO])
+        // {
+        //     // 300[mm]
+        //     pubLiftingCommand.data[0] = 1;
+        //     pubLiftingCommand.data[1] = (joyMsg.buttons[RB] ? 5 : 1);
+        //     ROS_INFO("Auto movement");
+        // }
+        // else if (joyMsg.buttons[THREE])
+        // {
+        //     // 500[mm]
+        //     pubLiftingCommand.data[0] = 1;
+        //     pubLiftingCommand.data[1] = 2;
+        //     ROS_INFO("Auto movement");
+        // }
+        // else if (joyMsg.buttons[FOUR])
+        // {
+        //     // 700[mm]
+        //     pubLiftingCommand.data[0] = 1;
+        //     pubLiftingCommand.data[1] = 3;
+        //     ROS_INFO("Auto movement");
+        // }
+        // else if (/* ifPrevAutomation */ prePubLiftingCommand.data[0]==1&&prePubLiftingCommand.data[1]!=-1)
+        // {
+        //     pubLiftingCommand.data[0] = 1;
+        //     pubLiftingCommand.data[1] = -1;
+        //     ROS_INFO("Released auto movement");
+        // }
+        // ifPrevAutomation = (pubLiftingCommand.data[0] == 1 && !ifPrevAutomation);
+
+        //2, 4キー -> 把持用エアシリンダ作動
+        // if (joyMsg.axes[CROSS_LR] > 0.0)
+        if (joyMsg.buttons[TWO])
         {
-            // 100[mm]
-            pubLiftingCommand.data[0] = 1;
-            pubLiftingCommand.data[1] = (joyMsg.buttons[RB] ? 4 : 0);
-            ROS_INFO("Auto movement");
+            // pubDiskCatchingCommand.data[0] = 0;
+            // pubDiskCatchingCommand.data[1] = 1;
+            pubLiftingCommand.data[0]=4;
+            pubLiftingCommand.data[1]=1;
         }
-        else if (joyMsg.buttons[TWO])
-        {
-            // 300[mm]
-            pubLiftingCommand.data[0] = 1;
-            pubLiftingCommand.data[1] = (joyMsg.buttons[RB] ? 5 : 1);
-            ROS_INFO("Auto movement");
-        }
-        else if (joyMsg.buttons[THREE])
-        {
-            // 500[mm]
-            pubLiftingCommand.data[0] = 1;
-            pubLiftingCommand.data[1] = 2;
-            ROS_INFO("Auto movement");
-        }
+        // else if (joyMsg.axes[CROSS_LR] < 0.0)
         else if (joyMsg.buttons[FOUR])
         {
-            // 700[mm]
-            pubLiftingCommand.data[0] = 1;
-            pubLiftingCommand.data[1] = 3;
-            ROS_INFO("Auto movement");
+            // pubDiskCatchingCommand.data[0] = 0;
+            // pubDiskCatchingCommand.data[1] = 2;
+            pubLiftingCommand.data[0]=4;
+            pubLiftingCommand.data[1]=2;
         }
-        else if (/* ifPrevAutomation */ prePubLiftingCommand.data[0]==1&&prePubLiftingCommand.data[1]!=-1)
-        {
-            pubLiftingCommand.data[0] = 1;
-            pubLiftingCommand.data[1] = -1;
-            ROS_INFO("Released auto movement");
-        }
-        // ifPrevAutomation = (pubLiftingCommand.data[0] == 1 && !ifPrevAutomation);
 
         //手動調整命令
         if (joyMsg.axes[CROSS_TB] > 0.0)
@@ -143,70 +161,71 @@ void joyCallback(const sensor_msgs::Joy &joyMsg)
     }
     else
     {
+        //LB + 2, 4キー -> 回転用エアシリンダ作動
         if (joyMsg.buttons[LB])
         {
-            if (joyMsg.buttons[ONE])
+            if (joyMsg.buttons[TWO])
             {
-                pubDiskCatchingCommand.data[0] = 1;
-                pubDiskCatchingCommand.data[1] = 2;
-            pubLiftingCommand.data[0]=5;
-            pubLiftingCommand.data[1]=2;
+                // pubDiskCatchingCommand.data[0] = 1;
+                // pubDiskCatchingCommand.data[1] = 2;
+                pubLiftingCommand.data[0]=5;
+                pubLiftingCommand.data[1]=1;
             }
-            else if (joyMsg.buttons[THREE])
+            else if (joyMsg.buttons[FOUR])
             {
-                pubDiskCatchingCommand.data[0] = 1;
-                pubDiskCatchingCommand.data[1] = 1;
-            pubLiftingCommand.data[0]=5;
-            pubLiftingCommand.data[1]=1;
-            }
-        }
-        if (joyMsg.buttons[LT])
-        {
-            if (joyMsg.buttons[ONE])
-            {
-                pubDiskCatchingCommand.data[0] = 2;
-                pubDiskCatchingCommand.data[1] = 1;
-                ifPrevManualRotation = true;
-            }
-            else if (joyMsg.buttons[THREE])
-            {
-                pubDiskCatchingCommand.data[0] = 2;
-                pubDiskCatchingCommand.data[1] = -1;
-                ifPrevManualRotation = true;
-            }
-            else if (ifPrevManualRotation)
-            {
-                pubDiskCatchingCommand.data[0] = 2;
-                pubDiskCatchingCommand.data[1] = 0;
-                ifPrevManualRotation = false;
+                // pubDiskCatchingCommand.data[0] = 1;
+                // pubDiskCatchingCommand.data[1] = 1;
+                pubLiftingCommand.data[0]=5;
+                pubLiftingCommand.data[1]=2;
             }
         }
+        // if (joyMsg.buttons[LT])
+        // {
+        //     if (joyMsg.buttons[ONE])
+        //     {
+        //         // pubDiskCatchingCommand.data[0] = 2;
+        //         // pubDiskCatchingCommand.data[1] = 1;
+        //         ifPrevManualRotation = true;
+        //     }
+        //     else if (joyMsg.buttons[THREE])
+        //     {
+        //         // pubDiskCatchingCommand.data[0] = 2;
+        //         // pubDiskCatchingCommand.data[1] = -1;
+        //         ifPrevManualRotation = true;
+        //     }
+        //     else if (ifPrevManualRotation)
+        //     {
+        //         // pubDiskCatchingCommand.data[0] = 2;
+        //         // pubDiskCatchingCommand.data[1] = 0;
+        //         ifPrevManualRotation = false;
+        //     }
+        // }
 
-        // if (joyMsg.axes[CROSS_LR] > 0.0)
-        if (joyMsg.buttons[TWO])
-        {
-            pubDiskCatchingCommand.data[0] = 0;
-            pubDiskCatchingCommand.data[1] = 1;
-            pubLiftingCommand.data[0]=4;
-            pubLiftingCommand.data[1]=1;
+        // // if (joyMsg.axes[CROSS_LR] > 0.0)
+        // if (joyMsg.buttons[TWO])
+        // {
+        //     // pubDiskCatchingCommand.data[0] = 0;
+        //     // pubDiskCatchingCommand.data[1] = 1;
+        //     pubLiftingCommand.data[0]=4;
+        //     pubLiftingCommand.data[1]=1;
             
-        }
-        // else if (joyMsg.axes[CROSS_LR] < 0.0)
-        else if (joyMsg.buttons[FOUR])
-        {
-            pubDiskCatchingCommand.data[0] = 0;
-            pubDiskCatchingCommand.data[1] = 2;
-            pubLiftingCommand.data[0]=4;
-            pubLiftingCommand.data[1]=2;
-        }
-        else if (ifPrevDiskAir)
-        {
-            pubDiskCatchingCommand.data[0] = 0;
-            pubDiskCatchingCommand.data[1] = 0;
-            pubLiftingCommand.data[0]=4;
-            pubLiftingCommand.data[1]=0;
-        }
-        ifPrevDiskAir = (pubDiskCatchingCommand.data[0] == 0 && !ifPrevDiskAir);
+        // }
+        // // else if (joyMsg.axes[CROSS_LR] < 0.0)
+        // else if (joyMsg.buttons[FOUR])
+        // {
+        //     // pubDiskCatchingCommand.data[0] = 0;
+        //     // pubDiskCatchingCommand.data[1] = 2;
+        //     pubLiftingCommand.data[0]=4;
+        //     pubLiftingCommand.data[1]=2;
+        // }
+        // else if (ifPrevDiskAir)
+        // {
+        //     // pubDiskCatchingCommand.data[0] = 0;
+        //     // pubDiskCatchingCommand.data[1] = 0;
+        //     pubLiftingCommand.data[0]=4;
+        //     pubLiftingCommand.data[1]=0;
+        // }
+        // ifPrevDiskAir = (pubDiskCatchingCommand.data[0] == 0 && !ifPrevDiskAir);
         // prevCrossLR = joyMsg.axes[CROSS_LR];
     }
 }
@@ -223,14 +242,14 @@ int main(int argc, char **argv)
     prePubLiftingCommand.data[1] = 1;
     prePubLiftingCommand.data[2] = 1;
 
-    pubDiskCatchingCommand.data.resize(2);
-    prePubDiskCatchingCommand.data.resize(2);
+    //pubDiskCatchingCommand.data.resize(2);
+    //prePubDiskCatchingCommand.data.resize(2);
 
     ros::init(argc, argv, "joy_sub_node");
     ros::NodeHandle nh;
-    diskLiftingPub = nh.advertise<std_msgs::Int16MultiArray>("liftDisk", 1000);
-    diskCatchingPub = nh.advertise<std_msgs::Int16MultiArray>("catchDisk", 1000);
-    sub = nh.subscribe("joy", 1000, joyCallback);
+    diskLiftingPub = nh.advertise<std_msgs::Int16MultiArray>("liftDisk", 10);
+    //diskCatchingPub = nh.advertise<std_msgs::Int16MultiArray>("catchDisk", 10);
+    sub = nh.subscribe("joy", 10, joyCallback);
 
     ros::Rate loop_rate(50);
     while (ros::ok())
@@ -243,12 +262,12 @@ int main(int argc, char **argv)
             diskLiftingPub.publish(pubLiftingCommand);
             prePubLiftingCommand = pubLiftingCommand;
         }
-        if (pubDiskCatchingCommand.data[0] != prePubDiskCatchingCommand.data[0] || pubDiskCatchingCommand.data[1] != prePubDiskCatchingCommand.data[1])
-        {
-            diskCatchingPub.publish(pubDiskCatchingCommand);
-            diskCatchingPub.publish(pubDiskCatchingCommand);
-            prePubDiskCatchingCommand = pubDiskCatchingCommand;
-        }
+        // if (pubDiskCatchingCommand.data[0] != prePubDiskCatchingCommand.data[0] || pubDiskCatchingCommand.data[1] != prePubDiskCatchingCommand.data[1])
+        // {
+        //     diskCatchingPub.publish(pubDiskCatchingCommand);
+        //     diskCatchingPub.publish(pubDiskCatchingCommand);
+        //     prePubDiskCatchingCommand = pubDiskCatchingCommand;
+        // }
         loop_rate.sleep();
     }
     return 0;

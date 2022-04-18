@@ -61,23 +61,27 @@ void messageCb(const std_msgs::Int16MultiArray &command_msg)
         arm.setManualDirection(command_msg.data[2]);
         break;
     case 4:
-        if (int command = command_msg.data[1] != 0)
+        if (command_msg.data[1] != 0)
         {
-            diskKeeper.setState(command);
+//            String info = "" + String(command_msg.data[1]);
+//            nh.logwarn(info.c_str());
+            diskKeeper.setState(command_msg.data[1]);
         }
-        else if (command == 0 || diskKeeper.getState() != 0)
+        else if (command_msg.data[1] == 0 || diskKeeper.getState() != 0)
         {
             diskKeeper.setState(0);
         }
+        break;
     case 5:
-        if (int command = command_msg.data[1] != 0)
+        if (command_msg.data[1] != 0)
         {
-            armRotater.setState(command);
+            armRotater.setState(command_msg.data[1]);
         }
-        else if (command == 0 || armRotater.getState() != 0)
+        else if (command_msg.data[1] == 0 || armRotater.getState() != 0)
         {
             armRotater.setState(0);
         }
+        break;
     default:
         break;
     }
@@ -104,7 +108,7 @@ void setup()
     // pub_msg.data = (int32_t *)malloc(sizeof(int32_t) * 5);
     // pub_msg.data_length = 5;
 
-    Serial.begin(57600);
+    Serial.begin(115200);
 }
 
 void loop()
@@ -150,7 +154,7 @@ void loop()
         {
             movable.immediateStop();
         }
-        nh.loginfo("Movable is in Touch");
+        //nh.loginfo("Movable is in Touch");
     }
     if (arm.ifTouch())
     {
@@ -159,7 +163,7 @@ void loop()
         {
             arm.immediateStop();
         }
-        nh.loginfo("Arm is in Touch");
+        //nh.loginfo("Arm is in Touch");
     }
 
     movableMd << movable.pwm();
@@ -171,7 +175,7 @@ void loop()
     armRotater.checkTimePassed();
 
     // Logging
-    nh.logwarn("LOOP");
+    /*nh.logwarn("LOOP");
     String mode = "Working Mode. Arm: " + String(arm.getMode()) + " Movable: " + String(movable.getMode());
     nh.loginfo(mode.c_str());
     String armPWM = "Arm PWM: " + String(arm.pwm());
@@ -191,7 +195,7 @@ void loop()
     String armMovement = "Arm Movement: " + String(arm.getCurrentMovementInMM());
     nh.loginfo(armMovement.c_str());
     String movableMovement = "Movable Movement: " + String(movable.getCurrentMovementInMM());
-    nh.loginfo(movableMovement.c_str());
+    nh.loginfo(movableMovement.c_str());*/
 
     // pub_msg.data[0] = arm.getCurrentHeightInMM();
     // pub_msg.data[1] = movable.getCurrentMovementInMM();
