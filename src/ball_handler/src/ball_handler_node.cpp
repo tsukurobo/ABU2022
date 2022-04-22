@@ -20,6 +20,7 @@ private:
 
     //parameters
     int boh_rot_speed_ = 0;
+    int boh_autorot_speed_ = 100;
 
     enum Actuators
     {
@@ -74,10 +75,10 @@ private:
 public:
     void joyCb(const sensor_msgs::Joy::ConstPtr &msg)
     {
-        //4キー押すたびにPUSH/PULL -> 一定時間待ってNUTRALとなるようにする
+        //3キー押すたびにPUSH/PULL -> 一定時間待ってNUTRALとなるようにする
         
-        //Hitterモードかつ十字キー右が押されているとき
-        if(role_flag_ == HITTER && msg->FOUR == PUSHED)
+        //Hitterモードかつ3キーが押されているとき
+        if(role_flag_ == HITTER && msg->THREE == PUSHED)
         {
             //+8キーで展開用エアシリンダ作動 
             if(msg->EIGHT == PUSHED)
@@ -118,6 +119,11 @@ public:
             publishCmdToArduino(MOTOR_BOH, msg->AXES_LR*boh_rot_speed_);
             //ROS_INFO("%d", (int)(msg->AXES_LR*boh_rot_speed_));
         }
+        //Seekerモードで、足回りの回転動作が行われたとき
+        else if(role_flag_ == SEEKER /*&& msg->STICK_R_LR != 0*/)
+        {
+            publishCmdToArduino(MOTOR_BOH, msg->STICK_R_LR*boh_autorot_speed_);
+        }
 
         //7と8の同時押しで、Seeker用/Hitter用キー配置を切り替える
         if(msg->SEVEN == PUSHED && msg->EIGHT == PUSHED)
@@ -138,7 +144,8 @@ public:
     : dura_(0.5), role_flag_(HITTER) //role_flag_の初期値はHITTER
     {
         while(!nh.getParam("ball_handler/boh_rot_speed", boh_rot_speed_)){ROS_ASSERT(false);}
-        
+        while(!nh.getParam("ball_handler/boh_autorot_speed", boh_autorot_speed_)){ROS_ASSERT(false);}
+
         ros::SubscribeOptions ops_joy;
         //boost::bind(pointer of member function, reference to instance, args...)
         ops_joy.template initByFullCallbackType<sensor_msgs::Joy::ConstPtr>("joy", 10, boost::bind(&BallHandler::joyCb, this, _1));

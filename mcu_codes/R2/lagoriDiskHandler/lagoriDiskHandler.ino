@@ -44,14 +44,14 @@ void messageCb(const std_msgs::Int16MultiArray &command_msg)
         if (command_msg.data[2] == true && (prevCommandType != 0 || prevCommandB == false))
             arm.startInitialization();
         break;
-        /*     case 1:
-                if ((prevCommandType != 1 || prevCommandA != command_msg.data[1]) && command_msg.data[1] > -1)
-                {
-                    arm.setTargetHeight(HEIGHTS[command_msg.data[1]]);
-                    arm.setMode(1);
-                    movable.setMode(1);
-                }
-                break; */
+    case 1:
+        if ((prevCommandType != 1 || prevCommandA != command_msg.data[1]) && command_msg.data[1] > -1)
+        {
+            arm.setTargetHeight(HEIGHTS[command_msg.data[1]]);
+            arm.setMode(1);
+            movable.setMode(1);
+        }
+        break;
     case 2:
         if (prevCommandType != 2 || prevCommandA != command_msg.data[1] || prevCommandB != command_msg.data[2])
             stop(command_msg.data[1], command_msg.data[2]);
@@ -63,9 +63,18 @@ void messageCb(const std_msgs::Int16MultiArray &command_msg)
     case 4:
         if (command_msg.data[1] != 0)
         {
-//            String info = "" + String(command_msg.data[1]);
-//            nh.logwarn(info.c_str());
+            //            String info = "" + String(command_msg.data[1]);
+            //            nh.logwarn(info.c_str());
             diskKeeper.setState(command_msg.data[1]);
+            bool newDiskKeeperForm = true;
+            if (command_msg.data[1] == 2)
+            {
+                movable.setMode(4);
+                arm.setMode(4);
+                newDiskKeeperForm = false;
+            }
+            diskKeeper.setForm(newDiskKeeperForm);
+            arm.setMotionRangeWithDiskCatcherRotatorForm(newDiskKeeperForm);
         }
         else if (command_msg.data[1] == 0 || diskKeeper.getState() != 0)
         {
@@ -114,38 +123,51 @@ void setup()
 void loop()
 {
     nh.spinOnce();
-    /*     if (bool isInAutoMoving = movable.getMode() == 1 || arm.getMode() == 1)
+    if (bool isInAutoMoving = movable.getMode() == 1 || arm.getMode() == 1)
+    {
+        long currentArmHeight = arm.getCurrentHeightInMM();
+        long targetHeight = arm.getTargetHeight();
+        bool ifDirectionUpward = currentArmHeight < targetHeight;
+        int autoDirection = 0;
+        if (ifDirectionUpward)
         {
-            long currentArmHeight = arm.getCurrentHeightInMM();
-            long targetHeight = arm.getTargetHeight();
-            bool ifDirectionUpward = currentArmHeight < targetHeight;
-            int autoDirection = 0;
-            if (ifDirectionUpward)
-            {
-                autoDirection = (currentArmHeight < targetHeight) ? 1 : 0;
-            }
-            else
-            {
-                autoDirection = (currentArmHeight > targetHeight + ACCEPTABLE_ERROR) ? -1 : 0;
-            }
+            autoDirection = (currentArmHeight < targetHeight) ? 1 : 0;
+        }
+        else
+        {
+            autoDirection = (currentArmHeight > targetHeight + ACCEPTABLE_ERROR) ? -1 : 0;
+        }
 
-            if (arm.getMode() == 1)
+        if (arm.getMode() == 1)
+        {
+            arm.setAutoDirection(autoDirection);
+            if (autoDirection == 0)
             {
-                arm.setAutoDirection(autoDirection);
-                if (autoDirection == 0)
-                {
-                    arm.immediateStop();
-                }
+                arm.immediateStop();
             }
-            if (movable.getMode() == 1)
+        }
+        if (movable.getMode() == 1)
+        {
+            movable.setAutoDirection(autoDirection);
+            if (autoDirection == 0)
             {
-                movable.setAutoDirection(autoDirection);
-                if (autoDirection == 0)
-                {
-                    movable.immediateStop();
-                }
+                movable.immediateStop();
             }
-        } */
+        }
+    }
+
+    // If Wating For Auto Rising
+    if ((movable.getMode() == 4 || arm.getMode() == 4) && diskKeeper.getState() == 0)
+    {
+        if (movable.getMode() == 4)
+        {
+            movable.setMode(5);
+        }
+        if (arm.getMode() == 4)
+        {
+            arm.setMode(5);
+        }
+    }
 
     if (movable.ifTouch())
     {
@@ -154,7 +176,7 @@ void loop()
         {
             movable.immediateStop();
         }
-        //nh.loginfo("Movable is in Touch");
+        // nh.loginfo("Movable is in Touch");
     }
     if (arm.ifTouch())
     {
@@ -163,7 +185,7 @@ void loop()
         {
             arm.immediateStop();
         }
-        //nh.loginfo("Arm is in Touch");
+        // nh.loginfo("Arm is in Touch");
     }
 
     movableMd << movable.pwm();
@@ -197,6 +219,12 @@ void loop()
     String movableMovement = "Movable Movement: " + String(movable.getCurrentMovementInMM());
     nh.loginfo(movableMovement.c_str());*/
 
+    String armTarget = "Target Height: " + String(arm.getTargetHeight());
+    nh.loginfo(armTarget.c_str());
+    String armHeight = "Arm Height: " + String(arm.getCurrentHeightInMM());
+    nh.loginfo(armHeight.c_str());
+    String movableMovement = "Movable Movement: " + String(movable.getCurrentMovementInMM());
+    nh.loginfo(movableMovement.c_str());
     // pub_msg.data[0] = arm.getCurrentHeightInMM();
     // pub_msg.data[1] = movable.getCurrentMovementInMM();
     // pub_msg.data[2] = arm.getCurrentMovementInMM();

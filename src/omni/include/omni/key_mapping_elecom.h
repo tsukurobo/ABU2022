@@ -10,5 +10,3 @@
 #define AXES_LR axes[4]
 #define STICK_L_LR axes[0]
 #define STICK_L_UD axes[1]
-#define STICK_R_LR axes[3]
-

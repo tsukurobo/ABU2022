@@ -19,7 +19,7 @@ long Belt::getCurrentMovementInMM() const { return convertEncoderToMM(getCurrent
 bool Belt::ifTouch() const { return digitalRead(touchPin); }
 bool Belt::ifImmediateStopPossible() const
 {
-    return (getMode() == 0 || (getMode() == 3 && manualDirection * pwmPositiveDirection == 1) || (getMode() == 1 && autoDirection * pwmPositiveDirection == 1));
+    return (getMode() == 0 || (getMode() == 3 && manualDirection * pwmPositiveDirection == 1) || (getMode() == 1 && autoDirection * pwmPositiveDirection == 1) || (getMode() == 5 && pwmPositiveDirection == 1));
 }
 int Belt::pwm()
 {
@@ -29,14 +29,14 @@ int Belt::pwm()
         return max(pwmUpward, pwmDownward);
     }
     //自動移動
-    /*     else if (mode == 1)
+    else if (mode == 1)
+    {
+        if ((autoDirection * pwmPositiveDirection == 1) || (encoder < initialPosition + convertMMToEncoder(getMotionRange()) && autoDirection * pwmPositiveDirection == -1))
         {
-            if ((autoDirection * pwmPositiveDirection == 1) || (encoder < initialPosition + convertMMToEncoder(getMotionRange()) && autoDirection * pwmPositiveDirection == -1))
-            {
-                return static_cast<int>(DEFAULT_PWM * autoDirection * pwmPositiveDirection);
-            }
-            return 0;
-        } */
+            return static_cast<int>((autoDirection > 0) ? pwmUpward : pwmDownward) ;
+        }
+        return 0;
+    }
     //手動制御
     else if (mode == 3)
     {
@@ -55,6 +55,10 @@ int Belt::pwm()
         }
 
         return 0;
+    }
+    else if (mode == 5)
+    {
+        return (pwmPositiveDirection == 1) || (encoder < initialPosition + convertMMToEncoder(getMotionRange()) && pwmPositiveDirection == -1) ? pwmUpward : 0;
     }
     //停止中
     else

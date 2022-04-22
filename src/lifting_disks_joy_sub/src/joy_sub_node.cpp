@@ -114,6 +114,11 @@ void joyCallback(const sensor_msgs::Joy &joyMsg)
             pubLiftingCommand.data[1] = (joyMsg.buttons[RT] ? 0 : -1);
             pubLiftingCommand.data[2] = (joyMsg.buttons[RB] ? 0 : -1);
             ROS_INFO("Manual movement");
+
+           if(joyMsg.buttons[RT]&&joyMsg.buttons[RB]){
+                pubLiftingCommand.data[0] = 1;
+                pubLiftingCommand.data[1] = 0;
+            }
         }
         else if (prevCrossTB != 0.0)
         {

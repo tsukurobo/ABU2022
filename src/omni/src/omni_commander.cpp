@@ -3,23 +3,43 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <abu2022_msgs/BaseCmd.h>
+#include "omni/key_mapping_elecom.h"
 // #include <abu2022_msgs/BaseData.h>
 #include <math.h>
 
 class OmniCommander
 {
 private:
+    enum RoleFlag
+    {
+        SEEKER = 0,
+        HITTER
+    }role_flag_;
+
     ros::Publisher vel_pub_;
     ros::Subscriber joy_sub_;
     // ros::Subscriber omni_sub_;
     abu2022_msgs::BaseCmd ard_cmd_;
 
-    double max_lin_vel_ = 0, max_rot_vel_ = 0;  //最大並進速度と回転速度。ともに単位はm/s
+    double max_lin_vel_ = 0, max_rot_vel_ = 0;  //最大並進速度と回転速度。単位はm/sとrad/s
+    double max_lin_vel_slow_ = 0, max_rot_vel_slow_ = 0,  //ゆっくりめの並進速度と回転速度。単位はm/sとrad/s
+           max_lin_vel_fast_ = 0, max_rot_vel_fast_ = 0;  //速めの並進速度と回転速度
     // double omni_theta_ = 0; //単位はrad
 
 public:
     void joyCb(const sensor_msgs::Joy::ConstPtr &msg)
     {
+        //do not switch mode (press seven and eight key at the same time) while using sticks
+        if(msg->SEVEN == 1 && msg->EIGHT == 1)
+        {
+            role_flag_ = (RoleFlag)(!role_flag_);
+            max_lin_vel_ = (role_flag_ == HITTER) ? max_lin_vel_fast_ : max_lin_vel_slow_;
+            max_rot_vel_ = (role_flag_ == HITTER) ? max_rot_vel_fast_ : max_rot_vel_slow_;
+
+            ROS_INFO("omni_commander: switched to %s mode", (role_flag_ == HITTER) ? "hitter" : "seeker");
+            return;
+        }
+
         double vx = max_lin_vel_*msg->axes[1], vy = max_lin_vel_*msg->axes[0],
             v_mag = sqrt(vx*vx + vy*vy);
         
@@ -53,13 +73,20 @@ public:
     }
 
     OmniCommander(ros::NodeHandle &nh)
+    : role_flag_(HITTER)
     {
         vel_pub_ = nh.advertise<abu2022_msgs::BaseCmd>("cmd", 100);
         joy_sub_ = nh.subscribe("joy", 100, &OmniCommander::joyCb, this);
         // omni_sub_ = nh.subscribe("omni_info", 100, &OmniCommander::omniCb, this);
 
-        while(!nh.getParam("omni/max_linear_vel", max_lin_vel_));
-        while(!nh.getParam("omni/max_rotation_vel", max_rot_vel_));
+        while(!nh.getParam("omni/max_linear_vel_fast", max_lin_vel_fast_));
+        while(!nh.getParam("omni/max_rotation_vel_fast", max_rot_vel_fast_));
+        while(!nh.getParam("omni/max_linear_vel_slow", max_lin_vel_slow_));
+        while(!nh.getParam("omni/max_rotation_vel_slow", max_rot_vel_slow_)); 
+
+        //default values of max_lin_vel_ and max_rot_vel_ are set to that of "fast" version
+        max_lin_vel_ = max_lin_vel_fast_;
+        max_rot_vel_ = max_rot_vel_fast_;
     }
 
     /*~OmniCommander()

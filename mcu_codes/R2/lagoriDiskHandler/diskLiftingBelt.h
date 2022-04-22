@@ -16,10 +16,10 @@ private:
     const int encoderPositiveDirection; // 1だと上向き、-1だと下向き
     const int pwmPositiveDirection;
     const int touchPin;
-    const long motionRange;
+    long motionRange;
     const double convertingCoefficient;
     const int pwmUpward /* = DEFAULT_PWM */;
-    const int pwmDownward/*  = DEFAULT_PWM */;
+    const int pwmDownward /*  = DEFAULT_PWM */;
 
 public:
     /**
@@ -33,7 +33,7 @@ public:
      * @param pwmDownward
      * @param radius
      */
-    Belt(int encoderPositiveDirection, int touchPin, long motionRange, int pwmPositiveDirection,int pwmUpward, int pwmDownward, double radius);
+    Belt(int encoderPositiveDirection, int touchPin, long motionRange, int pwmPositiveDirection, int pwmUpward, int pwmDownward, double radius);
     uint8_t flag = 0;
     long encoder = 0;
 
@@ -43,13 +43,13 @@ public:
     /**
      * @brief Modeを取得
      * @details
-     * @return int 0…Initialization中 1…自動昇降中 2…停止中 3…手動昇降中
+     * @return int 0…Initialization中 1…自動昇降中 2…停止中 3…手動昇降中 4…自動上昇待機中 5…自動上昇中
      */
     int getMode() const;
     /**
      * @brief Modeを設定
      * @details
-     * @param value 0…Initialization中 1…自動昇降中 2…停止中 3…手動昇降中
+     * @param value 0…Initialization中 1…自動昇降中 2…停止中 3…手動昇降中 4…自動上昇待機中 5…自動上昇中
      */
     void setMode(const int &value);
     /**
@@ -98,6 +98,12 @@ public:
      */
     void setAutoDirection(const int &direction);
     /**
+     * @brief 移動範囲を再設定する
+     *
+     * @param range
+     */
+    void setMotionRange(const long &range);
+    /**
      * @brief タッチセンサに触れているか
      *
      * @return true
@@ -123,7 +129,6 @@ public:
      * @return int PWM
      */
     int pwm();
-
 };
 
 class Movable : public Belt
@@ -141,10 +146,16 @@ private:
 
 public:
     // using Belt::Belt;
-    Arm::Arm(int encoderPositiveDirection, int touchPin, long motionRange, int pwmPositiveDirection,int pwmUpward, int pwmDownward, double radius, Movable &movable);
+    Arm::Arm(int encoderPositiveDirection, int touchPin, long motionRange, int pwmPositiveDirection, int pwmUpward, int pwmDownward, double radius, Movable &movable);
     long getCurrentHeightInMM() const override;
     long getTargetHeight() const;
     void setTargetHeight(const long &value);
+    /**
+     * @brief Set the Motion Range With Disk Catcher Rotator Form object
+     *
+     * @param newForm (True:下 False：横)
+     */
+    void setMotionRangeWithDiskCatcherRotatorForm(const bool &newForm);
 };
 
 inline int Belt::getMode() const { return mode; }
@@ -165,8 +176,10 @@ inline void Belt::setCurrentPositionAsInitialPosition() { initialPosition = enco
 inline void Belt::setManualDirection(const int &value)
 {
     manualDirection = value;
-    if (mode == 2)
+    if (mode == 2 || mode == 5)
+    {
         setMode(3);
+    }
 }
 inline void Belt::setAutoDirection(const int &direction)
 {
@@ -175,3 +188,11 @@ inline void Belt::setAutoDirection(const int &direction)
 
 inline long Arm::getTargetHeight() const { return targetHeight; }
 inline void Arm::setTargetHeight(const long &value) { targetHeight = value; }
+inline void Belt::setMotionRange(const long &range)
+{
+    motionRange = range;
+}
+inline void Arm::setMotionRangeWithDiskCatcherRotatorForm(const bool &newForm)
+{
+    setMotionRange(ARM_MOTION_RANGE + (newForm ? 0 : ARM_ADDITIONAL_RANGE_WHEN_CATCHER_HORIZONTAL));
+}
