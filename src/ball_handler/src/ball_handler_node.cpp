@@ -1,5 +1,5 @@
 //joyconからの指令を変換してarduinoに送るノード
-
+#include <random>
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Int16MultiArray.h>
@@ -11,16 +11,22 @@ private:
     ros::Publisher cmd_pub_;
     ros::Subscriber joy_sub_;
     ros::Duration dura_;
+    ros::Timer boh_timer_;
     // ros::Subscriber omni_sub_;
     std_msgs::Int16MultiArray cmd_msg_;
     std::mutex mtx_;
+    std::mt19937 mt_;
+    std::uniform_int_distribution<> uid_;
 
     //1コールバック前の十字キー左右の状態
-    int axes_lr_pre = 0;
+    int axes_lr_pre_ = 0;
+    bool boh_auto_rot_ = false;
 
     //parameters
     int boh_rot_speed_ = 0;
     int boh_autorot_speed_ = 100;
+    int boh_random_speed_range_, 
+        boh_random_speed_center_;
 
     enum Actuators
     {
@@ -66,7 +72,6 @@ private:
         std::lock_guard<std::mutex> lock(mtx_);
         cmd_msg_.data[ACTUATOR_ID] = id;
         cmd_msg_.data[COMMAND] = val;
-
         //2度送るのは、1度だけだとマイコンまで届かないことが稀にあるため
         cmd_pub_.publish(cmd_msg_);
         cmd_pub_.publish(cmd_msg_);
@@ -112,25 +117,63 @@ public:
                 publishCmdToArduino(AIR_CYLINDER_CATCH, NUTRAL);
             }
         }
-        //Seekerモードで、かつ十字キーの左右の状態が変化したとき
-        else if(role_flag_ == SEEKER && msg->AXES_LR != axes_lr_pre)
-        {
-            axes_lr_pre = msg->AXES_LR;
-            publishCmdToArduino(MOTOR_BOH, msg->AXES_LR*boh_rot_speed_);
-            //ROS_INFO("%d", (int)(msg->AXES_LR*boh_rot_speed_));
-        }
-        //Seekerモードで、足回りの回転動作が行われたとき
+        // //Seekerモードで、かつ十字キーの左右の状態が変化したとき
+        // else if(role_flag_ == SEEKER && msg->AXES_LR != axes_lr_pre_)
+        // {
+        //     axes_lr_pre_ = msg->AXES_LR;
+        //     publishCmdToArduino(MOTOR_BOH, msg->AXES_LR*boh_rot_speed_);
+        //     //ROS_INFO("%d", (int)(msg->AXES_LR*boh_rot_speed_));
+        // }
+        //Seeker mode:
+        //rotate BOH at the particular speed when the rotation command around yaw axes is not zero
+        //rotate BOH at the random speed when the velocity command is zero
         else if(role_flag_ == SEEKER /*&& msg->STICK_R_LR != 0*/)
         {
-            publishCmdToArduino(MOTOR_BOH, msg->STICK_R_LR*boh_autorot_speed_);
+            if(msg->ONE == PUSHED)
+            {
+                boh_auto_rot_ = !boh_auto_rot_;
+                if(boh_auto_rot_ == false)
+                {
+                    publishCmdToArduino(MOTOR_BOH, 0);
+                    boh_timer_.stop();
+                }
+            }
+
+            if(msg->STICK_L_LR != 0 || msg->STICK_L_UD != 0 || msg->STICK_R_LR != 0)
+            {
+                boh_timer_.stop();
+                publishCmdToArduino(MOTOR_BOH, msg->STICK_R_LR*boh_autorot_speed_);
+            }
+            else if(boh_auto_rot_ == true && 
+                msg->STICK_L_LR == 0 && 
+                msg->STICK_L_UD == 0 && 
+                msg->STICK_R_LR == 0)
+            {
+                //publishCmdToArduino(MOTOR_BOH, uid_(mt_) - boh_random_speed_center_);
+                // publishCmdToArduino(MOTOR_BOH, 0);
+                boh_timer_.start();
+            }
         }
 
         //7と8の同時押しで、Seeker用/Hitter用キー配置を切り替える
         if(msg->SEVEN == PUSHED && msg->EIGHT == PUSHED)
         {
             role_flag_ = (RoleFlag)(!role_flag_);
-            ROS_INFO("Ball handler: switched mode to %s", role_flag_ ? "Hitter" : "Seeker");
+            if(role_flag_ == HITTER)
+            {
+                publishCmdToArduino(MOTOR_BOH, 0);
+                boh_timer_.stop();
+            }
+                
+            ROS_INFO("ball handler: switched mode to %s", role_flag_ ? "hitter" : "seeker");
         }
+    }
+
+    //this function is called to change the rotaion speed randomly
+    void timerCb(const ros::TimerEvent &e)
+    {
+        publishCmdToArduino(MOTOR_BOH, uid_(mt_) - boh_random_speed_center_);
+        // publishCmdToArduino(MOTOR_BOH, 0);
     }
 
     void startSpin()
@@ -143,8 +186,13 @@ public:
     BallHandler(ros::NodeHandle &nh)
     : dura_(0.5), role_flag_(HITTER) //role_flag_の初期値はHITTER
     {
+        double boh_speed_change_period;
+
         while(!nh.getParam("ball_handler/boh_rot_speed", boh_rot_speed_)){ROS_ASSERT(false);}
         while(!nh.getParam("ball_handler/boh_autorot_speed", boh_autorot_speed_)){ROS_ASSERT(false);}
+        while(!nh.getParam("ball_handler/boh_random_speed_center", boh_random_speed_center_)){ROS_ASSERT(false);}
+        while(!nh.getParam("ball_handler/boh_random_speed_range", boh_random_speed_range_)){ROS_ASSERT(false);}
+        while(!nh.getParam("ball_handler/boh_speed_change_period", boh_speed_change_period)){ROS_ASSERT(false);}
 
         ros::SubscribeOptions ops_joy;
         //boost::bind(pointer of member function, reference to instance, args...)
@@ -155,8 +203,15 @@ public:
         joy_sub_ = nh.subscribe(ops_joy);
         // omni_sub_ = nh.subscribe("omni_info", 100, &OmniCommander::omniCb, this);
 
+        boh_timer_ = nh.createTimer(ros::Duration(boh_speed_change_period), &BallHandler::timerCb, this);
+        boh_timer_.stop();
+
         cmd_msg_.data.resize(2);
 
+        std::random_device rnd;
+        mt_.seed(rnd());
+        std::uniform_int_distribution<>::param_type param(0, boh_random_speed_range_);
+        uid_.param(param);
     }
 };
 

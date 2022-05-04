@@ -1,3 +1,6 @@
 ball_handler:
  boh_rot_speed: 200
- boh_autorot_speed: 100
+ boh_autorot_speed: 150
+ boh_random_speed_center: 150
+ boh_random_speed_range: 50
+ boh_speed_change_period: 1.0

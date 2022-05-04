@@ -130,7 +130,7 @@ void joyCallback(const sensor_msgs::Joy &joyMsg)
         prevCrossTB = joyMsg.axes[CROSS_TB];
 
         //イニシャライズ命令
-        if (joyMsg.buttons[START])
+        if (joyMsg.buttons[BACK])
         {
             pubLiftingCommand.data[0] = 0;
             pubLiftingCommand.data[1] = (joyMsg.buttons[RT] ? 0 : 1);
@@ -146,10 +146,10 @@ void joyCallback(const sensor_msgs::Joy &joyMsg)
                 pubLiftingCommand.data[2] = 0;
             }
         }
-        prevStart = joyMsg.buttons[START];
+        prevStart = joyMsg.buttons[BACK];
 
         //停止命令
-        if (joyMsg.buttons[BACK])
+        if (joyMsg.buttons[START])
         {
             pubLiftingCommand.data[0] = 2;
             pubLiftingCommand.data[1] = (joyMsg.buttons[RT] ? 0 : 1);
@@ -162,7 +162,7 @@ void joyCallback(const sensor_msgs::Joy &joyMsg)
             pubLiftingCommand.data[1] = 0;
             pubLiftingCommand.data[2] = 0;
         }
-        prevBack = joyMsg.buttons[BACK];
+        prevBack = joyMsg.buttons[START];
     }
     else
     {

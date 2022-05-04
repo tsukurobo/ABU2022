@@ -1,0 +1,16 @@
+arm:
+ up_speed: 200 #CCR
+ down_speed: -255 #CCR
+ homing_speed: 170 #CCR
+ max_limit: 400 #[mm]
+#  min_limit: 50 #[mm]
+ max_limit_ex: 150 #[mm]
+movable_rail:
+ up_speed: -180 #CCR
+ down_speed: 200 #CCR
+ homing_speed: 150 #CCR
+ max_limit: 200 #[mm]
+ min_limit: 50 #[mm]
+others:
+ sleep_t_after_catch: 0.5 #[s]
+ sleep_t_after_release: 1.5 #[s]

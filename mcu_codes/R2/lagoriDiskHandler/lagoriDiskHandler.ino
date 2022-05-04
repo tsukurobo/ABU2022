@@ -1,6 +1,7 @@
 #pragma once
 #include <ros.h>
 #include <std_msgs/Int16MultiArray.h>
+#include <std_msgs/Int32MultiArray.h>
 #include "ise_motor_driver_v3.h"
 #include "airManager.h"
 #include "diskLiftingBelt.h"
@@ -21,8 +22,8 @@ Arm arm(-1, ARM_TOUCH_PIN, ARM_MOTION_RANGE, 1, ARM_UPWARD_PWM, ARM_DOWNWARD_PWM
 Air diskKeeper(KEEPER_AIR_PIN1, KEEPER_AIR_PIN2);
 Air armRotater(ROTATION_AIR_PIN1, ROTATION_AIR_PIN2);
 
-// std_msgs::Int32MultiArray pub_msg;
-// ros::Publisher pub("diskStatus", &pub_msg);
+std_msgs::Int32MultiArray pub_msg;
+ros::Publisher pub("diskStatus", &pub_msg);
 
 /**
  * @brief モーターの駆動を直ちに停止
@@ -66,12 +67,12 @@ void messageCb(const std_msgs::Int16MultiArray &command_msg)
             //            String info = "" + String(command_msg.data[1]);
             //            nh.logwarn(info.c_str());
             diskKeeper.setState(command_msg.data[1]);
-            bool newDiskKeeperForm = true;
+            bool newDiskKeeperForm = false;
             if (command_msg.data[1] == 2)
             {
                 movable.setMode(4);
                 arm.setMode(4);
-                newDiskKeeperForm = false;
+                //newDiskKeeperForm = false;
             }
             diskKeeper.setForm(newDiskKeeperForm);
             arm.setMotionRangeWithDiskCatcherRotatorForm(newDiskKeeperForm);
@@ -104,6 +105,7 @@ void setup()
 {
     nh.initNode();
     nh.subscribe(sub);
+    nh.advertise(pub);
 
     IseMotorDriver::begin();
     if (!movableMd == false)
@@ -114,8 +116,8 @@ void setup()
     pinMode(MOVABLE_TOUCH_PIN, INPUT_PULLUP);
     pinMode(ARM_TOUCH_PIN, INPUT_PULLUP);
 
-    // pub_msg.data = (int32_t *)malloc(sizeof(int32_t) * 5);
-    // pub_msg.data_length = 5;
+    pub_msg.data = (int32_t *)malloc(sizeof(int32_t) * 5);
+    pub_msg.data_length = 2;
 
     Serial.begin(115200);
 }
@@ -176,7 +178,7 @@ void loop()
         {
             movable.immediateStop();
         }
-        // nh.loginfo("Movable is in Touch");
+        nh.loginfo("Movable is in Touch");
     }
     if (arm.ifTouch())
     {
@@ -185,7 +187,7 @@ void loop()
         {
             arm.immediateStop();
         }
-        // nh.loginfo("Arm is in Touch");
+        nh.loginfo("Arm is in Touch");
     }
 
     movableMd << movable.pwm();
@@ -197,7 +199,7 @@ void loop()
     armRotater.checkTimePassed();
 
     // Logging
-    /*nh.logwarn("LOOP");
+/*    nh.logwarn("LOOP");
     String mode = "Working Mode. Arm: " + String(arm.getMode()) + " Movable: " + String(movable.getMode());
     nh.loginfo(mode.c_str());
     String armPWM = "Arm PWM: " + String(arm.pwm());
@@ -219,18 +221,18 @@ void loop()
     String movableMovement = "Movable Movement: " + String(movable.getCurrentMovementInMM());
     nh.loginfo(movableMovement.c_str());*/
 
-    String armTarget = "Target Height: " + String(arm.getTargetHeight());
-    nh.loginfo(armTarget.c_str());
-    String armHeight = "Arm Height: " + String(arm.getCurrentHeightInMM());
-    nh.loginfo(armHeight.c_str());
-    String movableMovement = "Movable Movement: " + String(movable.getCurrentMovementInMM());
-    nh.loginfo(movableMovement.c_str());
-    // pub_msg.data[0] = arm.getCurrentHeightInMM();
-    // pub_msg.data[1] = movable.getCurrentMovementInMM();
-    // pub_msg.data[2] = arm.getCurrentMovementInMM();
-    // pub_msg.data[3] = movable.getMode();
-    // pub_msg.data[4] = arm.getMode();
-    // pub.publish(&pub_msg);
+//    String armTarget = "Target Height: " + String(arm.getTargetHeight());
+//    nh.loginfo(armTarget.c_str());
+//    String armHeight = "Arm Height: " + String(arm.getCurrentHeightInMM());
+//    nh.loginfo(armHeight.c_str());
+//    String movableMovement = "Movable Movement: " + String(movable.getCurrentMovementInMM());
+//    nh.loginfo(movableMovement.c_str());
+     pub_msg.data[0] = arm.pwm();
+     pub_msg.data[1] = arm.getMode();
+//     pub_msg.data[2] = arm.getCurrentMovementInMM();
+//     pub_msg.data[3] = movable.pwm();
+//     pub_msg.data[4] = arm.pwm();
+     pub.publish(&pub_msg);
     delay(10);
 }
 

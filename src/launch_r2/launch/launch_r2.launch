@@ -1,6 +1,6 @@
 <launch>
-    <arg name="omni"        default="true"/>
-    <arg name="disc"        default="false"/>
+    <arg name="omni"        default="false"/>
+    <arg name="disc"        default="true"/>
     <arg name="ball_handler"        default="false"/>
 
     <node name="elecom_gamepad" type="joy_node" pkg="joy" output="screen"/>
@@ -10,19 +10,21 @@
         <node name="omni_commander" type="omni_commander" pkg="omni" output="screen"/>
         
         <node name="nucleo_f446re" type="serial_node.py" pkg="rosserial_python" output="screen">
-            <param name="port" value="/dev/ttyACM0"/>
+            <param name="port" value="/dev/stm32_omni"/>
             <param name="baud" value="115200" />
         </node>
     </group>
 
     <group if="$(arg disc)">
+        <rosparam command="load" file="$(find lift_disk2)/config/params.yaml"/>
         <!--<node name="disc_catch" pkg="disc" type="disc_catch" required="true">
             <param name="MAXPWM" value="255"/>
         </node>-->
-        <node name="lifting_disk_node" pkg="lifting_disks_joy_sub" type="lifting_disks_joy_sub_node" output="screen" />
-        
-        <node name="serial_node1" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM2" output="screen">
+        <!-- <node name="lifting_disk_node" pkg="lifting_disks_joy_sub" type="lifting_disks_joy_sub_node" output="screen" /> -->
+        <node name="lift_disk2_node" pkg="lift_disk2" type="lift_disk2_node" output="screen" />
+        <node name="serial_node1" pkg="rosserial_python" type="serial_node.py" args="/dev/arduino_disk" output="screen">
             <param name="baud" value="115200" />
+            <!-- <param name="baud" value="115200" /> -->
         </node>
         <!--<node name="serial_node2" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM2" output="screen">
             <param name="baud" value="115200" />
@@ -34,7 +36,7 @@
         <node name="ball_handler" type="ball_handler_node" pkg="ball_handler" output="screen"/>
         
         <node name="ball_handler_arduino" type="serial_node.py" pkg="rosserial_python" output="screen">
-            <param name="port" value="/dev/ttyACM1"/>
+            <param name="port" value="/dev/arduino_ball"/>
             <param name="baud" value="250000" />
         </node>
     </group>

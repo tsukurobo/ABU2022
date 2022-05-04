@@ -16,7 +16,7 @@ long Belt::convertMMToEncoder(const long &mm) const
     return static_cast<long>(static_cast<double>(mm) / convertingCoefficient);
 }
 long Belt::getCurrentMovementInMM() const { return convertEncoderToMM(getCurrentMovement()); }
-bool Belt::ifTouch() const { return digitalRead(touchPin); }
+bool Belt::ifTouch() const { return !digitalRead(touchPin); }
 bool Belt::ifImmediateStopPossible() const
 {
     return (getMode() == 0 || (getMode() == 3 && manualDirection * pwmPositiveDirection == 1) || (getMode() == 1 && autoDirection * pwmPositiveDirection == 1) || (getMode() == 5 && pwmPositiveDirection == 1));

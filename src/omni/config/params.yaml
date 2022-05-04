@@ -1,6 +1,6 @@
 omni:
  #手動走行なら、max_linear_velの値は2.0m/sくらいが良い
  max_linear_vel_fast: 2.0 #unit: m/s
- max_rotation_vel_fast: 3.0 #unit: rad/s
- max_linear_vel_slow: 1.0 #unit: m/s
- max_rotation_vel_slow: 1.5 #unit: rad/s
+ max_rotation_vel_fast: 2.5 #unit: rad/s
+ max_linear_vel_slow: 1.3 #unit: m/s     original -> 1.5
+ max_rotation_vel_slow: 1.8 #unit: rad/s original -> 2.0
