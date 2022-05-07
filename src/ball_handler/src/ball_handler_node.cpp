@@ -8,26 +8,6 @@
 class BallHandler
 {
 private:
-    ros::Publisher cmd_pub_;
-    ros::Subscriber joy_sub_;
-    ros::Duration dura_;
-    ros::Timer boh_timer_;
-    // ros::Subscriber omni_sub_;
-    std_msgs::Int16MultiArray cmd_msg_;
-    std::mutex mtx_;
-    std::mt19937 mt_;
-    std::uniform_int_distribution<> uid_;
-
-    //1コールバック前の十字キー左右の状態
-    int axes_lr_pre_ = 0;
-    bool boh_auto_rot_ = false;
-
-    //parameters
-    int boh_rot_speed_ = 0;
-    int boh_autorot_speed_ = 100;
-    int boh_random_speed_range_, 
-        boh_random_speed_center_;
-
     enum Actuators
     {
         AIR_CYLINDER_EXPAND = 0,
@@ -51,7 +31,11 @@ private:
         NUTRAL
     };
 
-    enum ButtonState {PUSHED = 1};
+    enum ButtonState 
+    {
+        PUSHED = 1,
+        RELEASED = 0
+        };
     enum LRAxesState
     {
         LEFT = 1, 
@@ -63,6 +47,27 @@ private:
         SEEKER = 0,
         HITTER
     }role_flag_;
+
+    ros::Publisher cmd_pub_;
+    ros::Subscriber joy_sub_;
+    ros::Duration dura_;
+    ros::Timer boh_timer_;
+    // ros::Subscriber omni_sub_;
+    std_msgs::Int16MultiArray cmd_msg_;
+    std::mutex mtx_;
+    std::mt19937 mt_;
+    std::uniform_int_distribution<> uid_;
+
+    //1コールバック前の十字キー左右の状態
+    int axes_lr_pre_ = 0;
+    bool boh_auto_rot_ = false;
+    ButtonState prev_key3_state_ = RELEASED;
+
+    //parameters
+    int boh_rot_speed_ = 0;
+    int boh_autorot_speed_ = 100;
+    int boh_random_speed_range_, 
+        boh_random_speed_center_;
 
     AirCylinderState states[Actuators::ACTUATOR_SIZE-1] = 
         {AirCylinderState::PULL};
@@ -83,8 +88,9 @@ public:
         //3キー押すたびにPUSH/PULL -> 一定時間待ってNUTRALとなるようにする
         
         //Hitterモードかつ3キーが押されているとき
-        if(role_flag_ == HITTER && msg->THREE == PUSHED)
+        if(role_flag_ == HITTER && msg->THREE == PUSHED && prev_key3_state_ == RELEASED)
         {
+            prev_key3_state_ = PUSHED;
             //+8キーで展開用エアシリンダ作動 
             if(msg->EIGHT == PUSHED)
             {
@@ -117,6 +123,8 @@ public:
                 publishCmdToArduino(AIR_CYLINDER_CATCH, NUTRAL);
             }
         }
+        else if(role_flag_ == HITTER && msg->THREE == RELEASED && prev_key3_state_ == PUSHED)
+            prev_key3_state_ = RELEASED;
         // //Seekerモードで、かつ十字キーの左右の状態が変化したとき
         // else if(role_flag_ == SEEKER && msg->AXES_LR != axes_lr_pre_)
         // {

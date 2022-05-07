@@ -1,7 +1,7 @@
 <launch>
-    <arg name="omni"        default="false"/>
+    <arg name="omni"        default="true"/>
     <arg name="disc"        default="true"/>
-    <arg name="ball_handler"        default="false"/>
+    <arg name="ball_handler"        default="true"/>
 
     <node name="elecom_gamepad" type="joy_node" pkg="joy" output="screen"/>
 

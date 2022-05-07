@@ -104,7 +104,8 @@ private:
          movable_rail_touched_pre_ = false,
          first_time_flag_ = true;
     ButtonState prev_state_key2_ = RELEASED,
-                prev_state_key3_ = RELEASED;
+                prev_state_key3_ = RELEASED,
+                prev_state_key5_ = RELEASED;
     ArmHandMotionMode catch_release_seq_mode_ = RELEASE;
     AirCylinderState ac_arm_rot_state_ = PUSH;
 
@@ -403,8 +404,10 @@ public:
         }
 
         // 5 -> make the arm horizontal
-        if(joymsg.FIVE == PUSHED)
+        if(joymsg.FIVE == PUSHED && prev_state_key5_ == RELEASED)
         {
+            prev_state_key5_ = PUSHED;
+
             //set the bottom limit of the movable rail according with the arm state
             if(ac_arm_rot_state_ == PUSH)
                 arm_max_limit_ += arm_max_limit_ex_;
@@ -417,6 +420,8 @@ public:
             // dura_ac_->sleep();
             // publishCmdToArduino(AIR_CYLINDER_ROT, NUTRAL);
         }
+        else if(joymsg.FIVE == RELEASED && prev_state_key5_ == PUSHED)
+            prev_state_key5_ = RELEASED;
 
         // 8 -> stop
         if(joymsg.EIGHT == PUSHED)
@@ -455,8 +460,8 @@ public:
         movable_rail_disp_ = movable_rail_disp_raw_ - movable_rail_disp_origin_;
         arm_touched_ = data->data[2];
         movable_rail_touched_ = data->data[3];
-        ROS_INFO("arm_disp = %d, movable_rail_disp = %d", arm_disp_, movable_rail_disp_);
-        ROS_INFO("is_movable_rail_over_max = %d, is_arm_over_max = %d", is_movable_rail_over_max_, is_arm_over_max_);
+        // ROS_INFO("arm_disp = %d, movable_rail_disp = %d", arm_disp_, movable_rail_disp_);
+        // ROS_INFO("is_movable_rail_over_max = %d, is_arm_over_max = %d", is_movable_rail_over_max_, is_arm_over_max_);
         //stop the arm if its displacement is over or under the limit or the switch is pressed
         // if(homing_seq_started_ == false)
         // {
