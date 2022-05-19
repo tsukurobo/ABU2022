@@ -29,8 +29,8 @@ private:
 public:
     void joyCb(const sensor_msgs::Joy::ConstPtr &msg)
     {
-        //do not switch mode (press seven and eight key at the same time) while using sticks
-        if(msg->SEVEN == 1 && msg->EIGHT == 1)
+        //do not switch mode (press windows key) while using sticks
+        if(msg->WINDOWS == 1 /* && msg->EIGHT == 1 */)
         {
             role_flag_ = (RoleFlag)(!role_flag_);
             max_lin_vel_ = (role_flag_ == HITTER) ? max_lin_vel_fast_ : max_lin_vel_slow_;

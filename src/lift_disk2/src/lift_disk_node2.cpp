@@ -1,14 +1,14 @@
 //this is a program to drive R2's lifting and catching mechanism
 
-//// Key Bindings (As of 2022/4/26) ////
-// 6 -> catch or release a disk, followed by the arm moving upwards or downwards
-// 8 -> stop
-// 5 -> make the arm horizontal
-// 7 -> start homing sequence
-// 2 -> move the arm and movable rail upwards
-// 3 -> move the arm and movable rail downwards
-// up + 2 or 3 -> move the arm upwards or downwards
-// down + 2 or 3 -> move the movable rail upwards or downwards
+//// Key Bindings (As of 2022/5/15) ////
+// RB -> catch or release a disk, followed by the arm moving upwards or downwards
+// B  -> stop
+// LB -> make the arm horizontal
+// X  -> start homing sequence
+// Y  -> move the arm and movable rail upwards
+// A  -> move the arm and movable rail downwards
+// up + Y or A -> move the arm upwards or downwards
+// down + Y or A -> move the movable rail upwards or downwards
 
 //// Important Specifications of This Program ////
 // You can NOT control the arm and the movable rail manually
@@ -146,8 +146,8 @@ public:
     //called when a message from joy_node is received
     void joyCb(const sensor_msgs::Joy &joymsg)
     {
-        //7 + 8 -> switch mode
-        if(joymsg.SEVEN == PUSHED && joymsg.EIGHT == PUSHED)
+        //windows button -> switch mode
+        if(joymsg.WINDOWS == PUSHED)
         {
             is_seeker_mode_on_ = !is_seeker_mode_on_;
             ROS_INFO("liftdisk_node: seeker mode %s", is_seeker_mode_on_ ? "on" : "off");
@@ -157,8 +157,8 @@ public:
         if(is_seeker_mode_on_ == false)
             return;
 
-        // 2 -> move the arm upwards
-        if(joymsg.TWO == PUSHED &&
+        // Y -> move the arm upwards
+        if(joymsg.Y == PUSHED &&
         catch_release_seq_started_ == false &&
         homing_seq_started_ == false)
         {
@@ -176,8 +176,8 @@ public:
                 publishCmdToArduino(MOVABLE_RAIL_MOTOR, movable_rail_up_speed_);
             }
         }
-        // 3 -> move the arm downwards
-        else if(joymsg.THREE == PUSHED &&
+        // A -> move the arm downwards
+        else if(joymsg.A == PUSHED &&
         catch_release_seq_started_ == false &&
         homing_seq_started_ == false)
         {
@@ -195,21 +195,21 @@ public:
             }
         }
 
-        else if(prev_state_key2_ == PUSHED && joymsg.TWO == ButtonState::RELEASED)
+        else if(prev_state_key2_ == PUSHED && joymsg.Y == ButtonState::RELEASED)
         {
             prev_state_key2_ = ButtonState::RELEASED;
             publishCmdToArduino(ARM_MOTOR, 0);
             publishCmdToArduino(MOVABLE_RAIL_MOTOR, 0);
         }
-        else if(prev_state_key3_ == PUSHED && joymsg.THREE == ButtonState::RELEASED)
+        else if(prev_state_key3_ == PUSHED && joymsg.A == ButtonState::RELEASED)
         {
             prev_state_key3_ = ButtonState::RELEASED;
             publishCmdToArduino(ARM_MOTOR, 0);
             publishCmdToArduino(MOVABLE_RAIL_MOTOR, 0);
         }
 
-        // 6 -> catch or release a disk, following the arm moving upwards or downwards
-        if(joymsg.SIX == PUSHED && 
+        // RB -> catch or release a disk, following the arm moving upwards or downwards
+        if(joymsg.RB == PUSHED && 
         catch_release_seq_started_ == false &&
         homing_seq_started_ == false)
         {
@@ -331,8 +331,8 @@ public:
             return;
         }
 
-        // 7 -> start homing sequence
-        if(joymsg.SEVEN == PUSHED &&
+        // X -> start homing sequence
+        if(joymsg.X == PUSHED &&
         catch_release_seq_started_ == false &&
         homing_seq_started_ == false)
         {
@@ -403,8 +403,8 @@ public:
             return;
         }
 
-        // 5 -> make the arm horizontal
-        if(joymsg.FIVE == PUSHED && prev_state_key5_ == RELEASED)
+        // LB -> make the arm horizontal
+        if(joymsg.LB == PUSHED && prev_state_key5_ == RELEASED)
         {
             prev_state_key5_ = PUSHED;
 
@@ -420,11 +420,11 @@ public:
             // dura_ac_->sleep();
             // publishCmdToArduino(AIR_CYLINDER_ROT, NUTRAL);
         }
-        else if(joymsg.FIVE == RELEASED && prev_state_key5_ == PUSHED)
+        else if(joymsg.LB == RELEASED && prev_state_key5_ == PUSHED)
             prev_state_key5_ = RELEASED;
 
-        // 8 -> stop
-        if(joymsg.EIGHT == PUSHED)
+        // B -> stop
+        if(joymsg.B == PUSHED)
         {
             if(homing_seq_started_ || catch_release_seq_started_)
                 is_stop_button_pressed_ = true;

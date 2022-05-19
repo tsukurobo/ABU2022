@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "ros",
             "includePath": [
                 "${workspaceFolder}/**",
                 "/opt/ros/noetic/include/**"

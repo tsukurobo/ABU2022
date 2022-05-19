@@ -56,18 +56,23 @@ private:
     std_msgs::Int16MultiArray cmd_msg_;
     std::mutex mtx_;
     std::mt19937 mt_;
-    std::uniform_int_distribution<> uid_;
+    std::uniform_real_distribution<> urd_;
 
-    //1コールバック前の十字キー左右の状態
-    int axes_lr_pre_ = 0;
-    bool boh_auto_rot_ = false;
-    ButtonState prev_key3_state_ = RELEASED;
+    //1コールバック前の状態を格納する変数
+    // int axes_lr_pre_ = 0;
+    // double axes_lr_pre_ = 0;
+    bool boh_auto_rot_ = true,
+         is_moving_ = false;
+    ButtonState prev_key3_state_ = RELEASED,
+                prev_listkey_state_ = RELEASED;
 
     //parameters
     int boh_rot_speed_ = 0;
     int boh_autorot_speed_ = 100;
-    int boh_random_speed_range_, 
-        boh_random_speed_center_;
+    int boh_random_speed_stop_max_, 
+        boh_random_speed_stop_min_,
+        boh_random_speed_move_max_,
+        boh_random_speed_move_min_;
 
     AirCylinderState states[Actuators::ACTUATOR_SIZE-1] = 
         {AirCylinderState::PULL};
@@ -85,14 +90,14 @@ private:
 public:
     void joyCb(const sensor_msgs::Joy::ConstPtr &msg)
     {
-        //3キー押すたびにPUSH/PULL -> 一定時間待ってNUTRALとなるようにする
+        //3(A)キー押すたびにPUSH/PULL -> 一定時間待ってNUTRALとなるようにする
         
-        //Hitterモードかつ3キーが押されているとき
-        if(role_flag_ == HITTER && msg->THREE == PUSHED && prev_key3_state_ == RELEASED)
+        //Hitterモードかつ3(A)キーが押されているとき
+        if(role_flag_ == HITTER && msg->A == PUSHED && prev_key3_state_ == RELEASED)
         {
             prev_key3_state_ = PUSHED;
-            //+8キーで展開用エアシリンダ作動 
-            if(msg->EIGHT == PUSHED)
+            //+5(LB)キーで展開用エアシリンダ作動 
+            if(msg->LB == PUSHED)
             {
                 publishCmdToArduino(AIR_CYLINDER_EXPAND, states[AIR_CYLINDER_EXPAND]);
                 states[AIR_CYLINDER_EXPAND] = (AirCylinderState)(!states[AIR_CYLINDER_EXPAND]);
@@ -101,8 +106,8 @@ public:
 
                 publishCmdToArduino(AIR_CYLINDER_EXPAND, NUTRAL);
             }
-            //+6キーで上下移動用エアシリンダ作動
-            else if(msg->SIX == PUSHED)
+            //+6(RB)キーで上下移動用エアシリンダ作動
+            else if(msg->RB == PUSHED)
             {
                 publishCmdToArduino(AIR_CYLINDER_LIFT, states[AIR_CYLINDER_LIFT]);
                 states[AIR_CYLINDER_LIFT] = (AirCylinderState)(!states[AIR_CYLINDER_LIFT]);
@@ -123,7 +128,7 @@ public:
                 publishCmdToArduino(AIR_CYLINDER_CATCH, NUTRAL);
             }
         }
-        else if(role_flag_ == HITTER && msg->THREE == RELEASED && prev_key3_state_ == PUSHED)
+        else if(role_flag_ == HITTER && msg->A == RELEASED && prev_key3_state_ == PUSHED)
             prev_key3_state_ = RELEASED;
         // //Seekerモードで、かつ十字キーの左右の状態が変化したとき
         // else if(role_flag_ == SEEKER && msg->AXES_LR != axes_lr_pre_)
@@ -137,40 +142,94 @@ public:
         //rotate BOH at the random speed when the velocity command is zero
         else if(role_flag_ == SEEKER /*&& msg->STICK_R_LR != 0*/)
         {
-            if(msg->ONE == PUSHED)
-            {
-                boh_auto_rot_ = !boh_auto_rot_;
-                if(boh_auto_rot_ == false)
-                {
-                    publishCmdToArduino(MOTOR_BOH, 0);
-                    boh_timer_.stop();
-                }
-            }
-
-            if(msg->STICK_L_LR != 0 || msg->STICK_L_UD != 0 || msg->STICK_R_LR != 0)
+            // if(msg->X == PUSHED)
+            // {
+            //     boh_auto_rot_ = !boh_auto_rot_;
+            //     if(boh_auto_rot_ == false)
+            //     {
+            //         publishCmdToArduino(MOTOR_BOH, 0);
+            //         boh_timer_.stop();
+            //     }
+            // }
+            if(msg->STICK_R_LR != 0)
             {
                 boh_timer_.stop();
                 publishCmdToArduino(MOTOR_BOH, msg->STICK_R_LR*boh_autorot_speed_);
+                // axes_lr_pre_ = msg->STICK_R_LR;
             }
-            else if(boh_auto_rot_ == true && 
+            // else if(msg->STICK_R_LR == 0 && axes_lr_pre_ != 0)
+            // {
+            //     publishCmdToArduino(MOTOR_BOH, 0);
+            //     axes_lr_pre_ = 0;
+            // }
+            else if(msg->STICK_L_LR != 0 || msg->STICK_L_UD != 0)
+            {
+                is_moving_ = true;
+
+                if(boh_auto_rot_) boh_timer_.start();
+                else publishCmdToArduino(MOTOR_BOH, 0);
+            }
+            else if(/* boh_auto_rot_ == true &&  */
                 msg->STICK_L_LR == 0 && 
                 msg->STICK_L_UD == 0 && 
                 msg->STICK_R_LR == 0)
             {
                 //publishCmdToArduino(MOTOR_BOH, uid_(mt_) - boh_random_speed_center_);
                 // publishCmdToArduino(MOTOR_BOH, 0);
-                boh_timer_.start();
+                is_moving_ = false;
+
+                if(boh_auto_rot_) boh_timer_.start();
+                else publishCmdToArduino(MOTOR_BOH, 0);
             }
+
+            //list key -> start or stop rotating boh
+            //WARNING: DO NOT PRESS THIS BUTTON WHILE ROTATING THE ROBOT
+            if(msg->LIST == PUSHED && prev_listkey_state_ == RELEASED)
+            {
+                prev_listkey_state_ = PUSHED;
+
+                //if boh is already moving, stops its movement
+                //if boh has stopped, starts rotating it
+                if(boh_timer_.hasStarted() == true)
+                {
+                    boh_auto_rot_ = false;
+                    publishCmdToArduino(MOTOR_BOH, 0);
+                    boh_timer_.stop();
+                }
+                else
+                {
+                    boh_auto_rot_ = true;
+                    double r = urd_(mt_);
+                    int speed = is_moving_ ? 
+                        (r*(boh_random_speed_move_max_ - boh_random_speed_move_min_) + 
+                            boh_random_speed_move_min_) : 
+                        (r*(boh_random_speed_stop_max_ - boh_random_speed_stop_min_) + 
+                            boh_random_speed_stop_min_);
+                    publishCmdToArduino(MOTOR_BOH, speed);
+                    boh_timer_.start();
+                }
+            }
+            if(msg->LIST == RELEASED && prev_listkey_state_ == PUSHED)
+            prev_listkey_state_ = RELEASED;
         }
 
-        //7と8の同時押しで、Seeker用/Hitter用キー配置を切り替える
-        if(msg->SEVEN == PUSHED && msg->EIGHT == PUSHED)
+        //Windowsキーで、Seeker用/Hitter用キー配置を切り替える
+        if(msg->WINDOWS == PUSHED /* && msg->EIGHT == PUSHED */)
         {
             role_flag_ = (RoleFlag)(!role_flag_);
             if(role_flag_ == HITTER)
             {
                 publishCmdToArduino(MOTOR_BOH, 0);
                 boh_timer_.stop();
+            }
+            else if(role_flag_ == SEEKER)
+            {
+                double r = urd_(mt_);
+                int speed =  r*(boh_random_speed_stop_max_ - boh_random_speed_stop_min_) + 
+                                boh_random_speed_stop_min_;
+        
+                publishCmdToArduino(MOTOR_BOH, speed);
+                boh_timer_.start();
             }
                 
             ROS_INFO("ball handler: switched mode to %s", role_flag_ ? "hitter" : "seeker");
@@ -180,7 +239,14 @@ public:
     //this function is called to change the rotaion speed randomly
     void timerCb(const ros::TimerEvent &e)
     {
-        publishCmdToArduino(MOTOR_BOH, uid_(mt_) - boh_random_speed_center_);
+        double r = urd_(mt_);
+        int speed = is_moving_ ? 
+            (r*(boh_random_speed_move_max_ - boh_random_speed_move_min_) + 
+                boh_random_speed_move_min_) : 
+            (r*(boh_random_speed_stop_max_ - boh_random_speed_stop_min_) + 
+                boh_random_speed_stop_min_);
+        
+        publishCmdToArduino(MOTOR_BOH, speed);
         // publishCmdToArduino(MOTOR_BOH, 0);
     }
 
@@ -196,17 +262,19 @@ public:
     {
         double boh_speed_change_period;
 
-        while(!nh.getParam("ball_handler/boh_rot_speed", boh_rot_speed_)){ROS_ASSERT(false);}
-        while(!nh.getParam("ball_handler/boh_autorot_speed", boh_autorot_speed_)){ROS_ASSERT(false);}
-        while(!nh.getParam("ball_handler/boh_random_speed_center", boh_random_speed_center_)){ROS_ASSERT(false);}
-        while(!nh.getParam("ball_handler/boh_random_speed_range", boh_random_speed_range_)){ROS_ASSERT(false);}
-        while(!nh.getParam("ball_handler/boh_speed_change_period", boh_speed_change_period)){ROS_ASSERT(false);}
+        while(!nh.getParam("ball_handler/boh_rot_speed", boh_rot_speed_)){ROS_INFO("error 1"); ROS_ASSERT(false);}
+        while(!nh.getParam("ball_handler/boh_autorot_speed", boh_autorot_speed_)){ROS_INFO("error 2"); ROS_ASSERT(false);}
+        while(!nh.getParam("ball_handler/boh_random_speed_stop_min", boh_random_speed_stop_min_)){ROS_INFO("error 3"); ROS_ASSERT(false);}
+        while(!nh.getParam("ball_handler/boh_random_speed_stop_max", boh_random_speed_stop_max_)){ROS_INFO("error 4"); ROS_ASSERT(false);}
+        while(!nh.getParam("ball_handler/boh_random_speed_move_min", boh_random_speed_move_min_)){ROS_INFO("error 5"); ROS_ASSERT(false);}
+        while(!nh.getParam("ball_handler/boh_random_speed_move_max", boh_random_speed_move_max_)){ROS_INFO("error 6"); ROS_ASSERT(false);}
+        while(!nh.getParam("ball_handler/boh_speed_change_period", boh_speed_change_period)){ROS_INFO("error 7"); ROS_ASSERT(false);}
 
         ros::SubscribeOptions ops_joy;
         //boost::bind(pointer of member function, reference to instance, args...)
         ops_joy.template initByFullCallbackType<sensor_msgs::Joy::ConstPtr>("joy", 10, boost::bind(&BallHandler::joyCb, this, _1));
         ops_joy.allow_concurrent_callbacks = true;
-        cmd_pub_ = nh.advertise<std_msgs::Int16MultiArray>("ball_handler_cmd", 10);
+        cmd_pub_ = nh.advertise<std_msgs::Int16MultiArray>("ball_handler_cmd", 100);
         //joy_sub_ = nh.subscribe("joy", 10, &BallHandler::joyCb, this);
         joy_sub_ = nh.subscribe(ops_joy);
         // omni_sub_ = nh.subscribe("omni_info", 100, &OmniCommander::omniCb, this);
@@ -218,8 +286,8 @@ public:
 
         std::random_device rnd;
         mt_.seed(rnd());
-        std::uniform_int_distribution<>::param_type param(0, boh_random_speed_range_);
-        uid_.param(param);
+        std::uniform_real_distribution<>::param_type param(0, 1.0);
+        urd_.param(param);
     }
 };
 
