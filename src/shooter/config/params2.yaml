@@ -17,11 +17,11 @@ roller:
 loader:
  #unit: deg
  #Arduinoの電源が入った時の装填機構の位置が0 degになる
- servo_r_angle_push: 30
- servo_r_angle_reset: 90
- servo_l_angle_push: 120
- servo_l_angle_reset: 60
- motor_angle_load: 120
+ servo_r_angle_push: 20
+ servo_r_angle_reset: 130
+ servo_l_angle_push: 140
+ servo_l_angle_reset: 35
+ motor_angle_load: 135
  motor_angle_init: -5
 
 lift:
@@ -30,4 +30,4 @@ lift:
  motor_bottom_angle: -50
  motor_middle_angle: -6000
  motor_top_angle: -10000
- updown_speed: 250
+ updown_speed: 180

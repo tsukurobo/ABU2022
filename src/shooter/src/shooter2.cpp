@@ -332,7 +332,7 @@ public:
             {
                 ROS_INFO("shooter2: homing sequence has started");
                 is_homing_seq_started_ = true;
-                publishCmdToArduino(Shooter2Actuator::LiftMotorNoPID, 200);
+                publishCmdToArduino(Shooter2Actuator::LiftMotorNoPID, 150);
                 while(lift_motor_sw_ == false)
                 {
                     if(is_stop_mode_enabled_ || !ros::ok())

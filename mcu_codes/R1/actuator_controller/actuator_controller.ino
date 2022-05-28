@@ -65,13 +65,13 @@ void setup()
     pids_p.vmin = -vmax_p;
 
     PIDController::PIDSettings pids_p2;
-    pids_p2.kp = kp_p;
-    pids_p2.ki = ki_p;
-    pids_p2.kd = kd_p;
+    pids_p2.kp = 1.5;
+    pids_p2.ki = 0.01;
+    pids_p2.kd = 0;
     pids_p2.ts = ts;
-    pids_p2.tdel = tdel_p;
-    pids_p2.vmax = 250;
-    pids_p2.vmin = -250;
+    pids_p2.tdel = 0;
+    pids_p2.vmax = 200;
+    pids_p2.vmin = -200;
 
     nh.getHardware()->setBaud(250000);
     nh.initNode();
