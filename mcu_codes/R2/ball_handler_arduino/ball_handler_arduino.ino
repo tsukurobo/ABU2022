@@ -12,7 +12,8 @@ ros::NodeHandle nh;
 //ros::Publisher data_pub("arduino_data", &ard_data);
 ros::Subscriber<std_msgs::Int16MultiArray> cmd_sub("ball_handler_cmd", &onReceiveCmd);
 
-Actuator::DCMotor *motor_boh;
+Actuator::DCMotorEx *motor_boh;
+//Actuator::DCMotorWithPosPID *motor_boh_pos;
 Actuator::AirCylinder *ac_exp, *ac_lift, *ac_catch;
 Actuator::ActuatorContainer container(PID_PERIOD, dataSender);
 
@@ -22,13 +23,24 @@ void setup()
     const uint8_t md_boh_addr = 0x22;
     const int ac_exp_pin1 = A4, ac_exp_pin2 = A5, ac_lift_pin1 = A0, ac_lift_pin2 = A1,
                 ac_catch_pin1 = A2, ac_catch_pin2 = A3;
+    const int enc_resol = 4096;
+    const float motor_acc = 2;
 
-    nh.getHardware()->setBaud(250000);
+    nh.getHardware()->setBaud(115200);
     nh.initNode();
     //nh.advertise(data_pub);
     nh.subscribe(cmd_sub);
     
-    motor_boh = new Actuator::DCMotor(md_boh_addr);
+    motor_boh = new Actuator::DCMotorEx(md_boh_addr, 0, motor_acc);
+//    PIDController::PIDSettings s;
+//    s.kp = 30.0;
+//    s.ki = 1.0;
+//    s.kd = 0.0;//0.04;
+//    s.vmax = 255;
+//    s.vmin = -255;
+//    s.tdel = 0.0005;
+//    s.ts = (float)PID_PERIOD/1000.0;
+//    motor_boh_pos = new Actuator::DCMotorWithPosPID(md_boh_addr, s, enc_resol);
     ac_exp = new Actuator::AirCylinder(ac_exp_pin1, ac_exp_pin2);
     ac_lift = new Actuator::AirCylinder(ac_lift_pin1, ac_lift_pin2);
     ac_catch = new Actuator::AirCylinder(ac_catch_pin1, ac_catch_pin2);
@@ -38,8 +50,9 @@ void setup()
     container.append(ac_lift);
     container.append(ac_catch);
     container.append(motor_boh);
-
+//    container.append(motor_boh_pos);
     //Serial.begin(250000);
+
     
 }
 
@@ -58,6 +71,14 @@ void loop()
 
 void onReceiveCmd(const std_msgs::Int16MultiArray &cmd)
 {
+//    if(cmd.data[0] == 3)
+//        motor_boh_pos->setEnablePID(false);
+//    else if(cmd.data[0] == 4)
+//    {
+//        motor_boh_pos->resetCurrentDegAsZero();
+//        motor_boh_pos->setEnablePID(true);
+//    }
+        
     container.setValue(cmd.data[0], cmd.data[1]);
 }
 

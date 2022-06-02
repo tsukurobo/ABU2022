@@ -25,7 +25,7 @@ const int touch_sens_top_pin = 5, touch_sens_bottom_pin = 3;
 void setup() 
 {               
     //pin assign
-    const uint8_t md_arm_addr = 0x15, md_mr_addr = 0x17;
+    const uint8_t md_arm_addr = 0x1B, md_mr_addr = 0x15;
     const int ac_hand_pin1 = 11, ac_hand_pin2 = 9,
               ac_rot_pin1 = 10, ac_rot_pin2 = 7;
     const int enc_resol = 4096;

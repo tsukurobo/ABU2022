@@ -231,7 +231,64 @@ namespace Actuator
         }
     };
 
-  
+    //モータークラス2(エンコーダ出力と台形制御付き、モータークラスを継承)
+    class DCMotorEx : public DCMotor
+    {
+    protected:
+        const float CONV_TO_RAD_, ACC_;
+        float goal_pwm_s_pre_, goal_pwm_;
+        
+    public:
+        //コンストラクタ（引数はMDのI2Cアドレス)
+        DCMotorEx(uint8_t addr, int enc_resol, float acc)
+        : DCMotor(addr, true), CONV_TO_RAD_(2.0*3.1415926/enc_resol), 
+          ACC_(acc), goal_pwm_s_pre_(0), goal_pwm_(0)
+        {
+//            IseMotorDriver::begin();
+//            md_ = new IseMotorDriver(addr);
+//            if(!(*md_) == false) *md_ << 0; //最初は停止
+        }
+
+        long executeTask()
+        {
+            long enc = 0;
+            float rad = 0, goal_pwm_s = 0;
+
+            //台形制御指令を計算
+            if(goal_pwm_s_pre_ < goal_pwm_)
+                goal_pwm_s = goal_pwm_s_pre_ + ACC_;
+            else if(goal_pwm_s_pre_ > goal_pwm_)
+                goal_pwm_s = goal_pwm_s_pre_ - ACC_;
+
+            if((goal_pwm_s - goal_pwm_)
+                *(goal_pwm_s_pre_ - goal_pwm_) <= 0)
+            {
+                goal_pwm_s = goal_pwm_;
+            }
+            goal_pwm_s_pre_ = goal_pwm_s;
+            if(!(*md_) == false)
+            {
+                *md_ << (int)goal_pwm_s;
+//                *md_ >> enc;
+            }
+            rad = CONV_TO_RAD_*enc;
+            
+            return rad*100; //unit: [x10^(-2) rad]
+        }
+        //MDにCCR値を送る
+        void setValue(long v)
+        {
+//            if(!(*md_) == false) *md_ << static_cast<int>(v);
+            goal_pwm_ = (float)v;
+        }
+//
+//        //リセット関数
+//        void reset()
+//        {
+//            if(!(*md_) == false) *md_ << 0;
+//        }
+    };
+
     
     //速度制御対応型モータークラス(Motorクラスを継承)
     class DCMotorWithVelPID : public DCMotor
@@ -402,7 +459,7 @@ namespace Actuator
         const float CONV_DENC_TO_DEG_;
         
         PIDController::PIDCalculator *pidc_;
-        long goal_deg_ = 0, enc_origin_ = 0;
+        long goal_deg_ = 0, enc_origin_ = 0, curr_enc_ = 0;
         bool enable_pid_ = true;
         
     public:
@@ -426,14 +483,17 @@ namespace Actuator
             
             if(!(*md_) == false)
             {   
-                long curr_enc = 0;
+//                long curr_enc = 0;
                 
-                *md_ >> curr_enc;    //エンコーダ値取得
-                long curr_enc_del = curr_enc - enc_origin_;   //原点からの変位を計算
+                *md_ >> curr_enc_;    //エンコーダ値取得
+                long curr_enc_del = curr_enc_ - enc_origin_;   //原点からの変位を計算
                 float curr_deg = CONV_DENC_TO_DEG_*curr_enc_del;      //変位をdegに変換
                 if(enable_pid_)
                 {
-                    float pidc_out = pidc_->calcValue(static_cast<float>(goal_deg_) - curr_deg);     //PID制御の計算(制御出力を求める)
+                    float deg_e = static_cast<float>(goal_deg_) - curr_deg;
+                    float pidc_out = pidc_->calcValue(deg_e);     //PID制御の計算(制御出力を求める)
+                    if(fabs(deg_e) > 2.0 && deg_e > 0) pidc_out += 10;
+                    else if(fabs(deg_e) > 2.0 && deg_e < 0) pidc_out -= 10;
                     *md_ << static_cast<int>(pidc_out);      //MDに送る 
                 }
                 
@@ -464,6 +524,12 @@ namespace Actuator
                 pidc_->reset();
                 
             enable_pid_ = x;
+        }
+
+        //現在の回転角度を、回転角度0°として再定義する
+        void resetCurrentDegAsZero()
+        {
+            enc_origin_ = curr_enc_;
         }
     };    
 
