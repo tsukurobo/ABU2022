@@ -15,7 +15,8 @@ ros::Publisher data_pub("arduino_data", &ard_data);
 ros::Subscriber<abu2022_msgs::R1ArduinoCmd> cmd_sub("arduino_cmd", &onReceiveCmd);
 
 Actuator::DCMotor *motor_pointer, *motor_roller_updown, *motor_lift_no_pid;
-Actuator::DCMotorWithVelPID *motor_roller_roller_r, *motor_roller_roller_l;
+/*Actuator::DCMotorWithVelPID*/
+Actuator::Actuator *motor_roller_roller_r, *motor_roller_roller_l;  //ダミー
 Actuator::DCMotorWithPosPID *motor_load, *motor_lift;
 //Actuator::DCMotor *motor_roller_roller1, *motor_roller_roller2; //一時しのぎ用
 Actuator::ServoMotor *servo_r, *servo_l;
@@ -36,24 +37,24 @@ void setup()
                 vmax_p = 150, tdel_p = 0.00125;
                 
     //ピンアサイン
-    const uint8_t md_pointer_addr = 0x14, md_roller_updown_addr = 0x15, md_roller_addrs[2] = {0x77, 0x1B},
+    const uint8_t md_pointer_addr = 0x14, md_roller_updown_addr = 0x15, /*md_roller_addrs[2] = {0x77, 0x1B},*/
                   md_load_addr = 0x17, md_lift_addr = 0x25;
     const int servo_r_pin = 2, servo_l_pin = 5, ac_pin1 = A13, ac_pin2 = A10;
 
     //台形制御用定数（モーターの加速度 [deg/s^2]）
-    const float rot_acc = 5730.0;//100;
+//    const float rot_acc = 5730.0;//100;
     
     //初期指令
     int servo_r_init_cmd = 0, servo_l_init_cmd = 0;
 
-    PIDController::PIDSettings pids;
-    pids.kp = kp;
-    pids.ki = ki;
-    pids.kd = kd;
-    pids.ts = ts;
-    pids.tdel = tdel;
-    pids.vmax = vmax;
-    pids.vmin = -vmax;
+//    PIDController::PIDSettings pids;
+//    pids.kp = kp;
+//    pids.ki = ki;
+//    pids.kd = kd;
+//    pids.ts = ts;
+//    pids.tdel = tdel;
+//    pids.vmax = vmax;
+//    pids.vmin = -vmax;
 
     PIDController::PIDSettings pids_p;
     pids_p.kp = kp_p;
@@ -65,13 +66,13 @@ void setup()
     pids_p.vmin = -vmax_p;
 
     PIDController::PIDSettings pids_p2;
-    pids_p2.kp = 1.5;
-    pids_p2.ki = 0.01;
-    pids_p2.kd = 0;
+    pids_p2.kp = kp_p;
+    pids_p2.ki = ki_p;
+    pids_p2.kd = kd_p;
     pids_p2.ts = ts;
-    pids_p2.tdel = 0;
-    pids_p2.vmax = 200;
-    pids_p2.vmin = -200;
+    pids_p2.tdel = tdel_p;
+    pids_p2.vmax = 250;
+    pids_p2.vmin = -250;
 
     nh.getHardware()->setBaud(250000);
     nh.initNode();
@@ -84,10 +85,12 @@ void setup()
     
     motor_pointer = new Actuator::DCMotor(md_pointer_addr);
     motor_roller_updown = new Actuator::DCMotor(md_roller_updown_addr);
-    motor_roller_roller_r = new Actuator::DCMotorWithVelPID(md_roller_addrs[0], pids, 
-                            enc_resol, rot_acc, k_enc);
-    motor_roller_roller_l = new Actuator::DCMotorWithVelPID(md_roller_addrs[1], pids,
-                            enc_resol, rot_acc, k_enc);
+//    motor_roller_roller_r = new Actuator::DCMotorWithVelPID(md_roller_addrs[0], pids, 
+//                            enc_resol, rot_acc, k_enc);
+//    motor_roller_roller_l = new Actuator::DCMotorWithVelPID(md_roller_addrs[1], pids,
+//                            enc_resol, rot_acc, k_enc);
+    motor_roller_roller_r = new Actuator::Actuator(false);
+    motor_roller_roller_l = new Actuator::Actuator(false);
     motor_load = new Actuator::DCMotorWithPosPID(md_load_addr, pids_p, enc_resol2);
     motor_lift = new Actuator::DCMotorWithPosPID(md_lift_addr, pids_p2, enc_resol);
     motor_lift_no_pid = new Actuator::DCMotor(md_lift_addr);
