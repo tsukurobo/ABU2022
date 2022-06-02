@@ -3,6 +3,6 @@ ball_handler:
  boh_autorot_speed: 150
  boh_random_speed_stop_min: 100 # both min and max have to be positive
  boh_random_speed_stop_max: 200
- boh_random_speed_move_min: 0 # both min and max have to be positive
- boh_random_speed_move_max: 100
+ boh_random_speed_move_min: 100 # both min and max have to be positive
+ boh_random_speed_move_max: 200
  boh_speed_change_period: 1.0

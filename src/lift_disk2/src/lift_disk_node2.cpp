@@ -230,6 +230,17 @@ public:
             //move the arm and movable rail upwards (after catching a disk)
             //or downwards (after releasing a disk)
 
+            if(catch_release_seq_mode_ == RELEASE && ac_arm_rot_state_ == PULL)
+            {
+                ROS_INFO("liftdisk_node: %s sequence has finished", 
+                        (catch_release_seq_mode_) == CATCH ? "catch" : "release");
+
+                //switch catch and release mode alternately
+                catch_release_seq_mode_ = (ArmHandMotionMode)(1-catch_release_seq_mode_);
+                catch_release_seq_started_ = false;
+                
+                return;
+            }
             ROS_INFO("liftdisk_node: moving the arm and the rail %s ", 
                 (catch_release_seq_mode_) == CATCH ? "upwards" : "downwards");
             

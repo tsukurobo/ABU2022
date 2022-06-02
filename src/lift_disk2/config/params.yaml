@@ -12,5 +12,5 @@ movable_rail:
  max_limit: 200 #[mm]
  min_limit: 40 #[mm]
 others:
- sleep_t_after_catch: 0.5 #[s]
+ sleep_t_after_catch: 0.5 # 0.5 #[s]
  sleep_t_after_release: 1.5 #[s]

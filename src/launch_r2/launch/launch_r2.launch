@@ -3,7 +3,9 @@
     <arg name="disc"        default="true"/>
     <arg name="ball_handler"        default="true"/>
 
-    <node name="elecom_gamepad" type="joy_node" pkg="joy" output="screen"/>
+    <node name="elecom_gamepad" type="joy_node" pkg="joy" output="screen">
+        <param name="coalesce_interval" value="0.01" />
+    </node> 
 
     <group if="$(arg omni)">
         <rosparam command="load" file="$(find omni)/config/params.yaml"/>
@@ -37,7 +39,7 @@
         
         <node name="ball_handler_arduino" type="serial_node.py" pkg="rosserial_python" output="screen">
             <param name="port" value="/dev/arduino_ball"/>
-            <param name="baud" value="250000" />
+            <param name="baud" value="115200" />
         </node>
     </group>
 

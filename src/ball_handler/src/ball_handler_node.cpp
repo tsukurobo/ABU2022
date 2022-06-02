@@ -14,6 +14,7 @@ private:
         AIR_CYLINDER_LIFT,
         AIR_CYLINDER_CATCH,
         MOTOR_BOH,
+        // MOTOR_BOH_POS,  //for position control in hitter mode
 
         ACTUATOR_SIZE
     };
@@ -74,7 +75,7 @@ private:
         boh_random_speed_move_max_,
         boh_random_speed_move_min_;
 
-    AirCylinderState states[Actuators::ACTUATOR_SIZE-1] = 
+    AirCylinderState states[Actuators::ACTUATOR_SIZE-2] = 
         {AirCylinderState::PULL};
 
     void publishCmdToArduino(Actuators id, int val)
@@ -220,6 +221,7 @@ public:
             if(role_flag_ == HITTER)
             {
                 publishCmdToArduino(MOTOR_BOH, 0);
+                // publishCmdToArduino(MOTOR_BOH_POS, 0);
                 boh_timer_.stop();
             }
             else if(role_flag_ == SEEKER)
@@ -288,6 +290,10 @@ public:
         mt_.seed(rnd());
         std::uniform_real_distribution<>::param_type param(0, 1.0);
         urd_.param(param);
+
+        //to prevent boh from rotating freely while the robot is moving,
+        //start position control
+        // publishCmdToArduino(MOTOR_BOH_POS, 0);
     }
 };
 
