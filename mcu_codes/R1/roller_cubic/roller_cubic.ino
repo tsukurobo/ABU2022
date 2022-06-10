@@ -6,6 +6,7 @@
 Cubic motor0;
 Cubic motor1;//インスタンス作成
 //int enc1,enc2;
+uint8_t send_flag = 0;  //cubicにデータを送信するかどうかを判定するフラグ
 
 void ctrlRoller(const abu2022_msgs::R1ArduinoCmd &);
 
@@ -24,7 +25,7 @@ ros::Subscriber<abu2022_msgs::R1ArduinoCmd> sub("arduino_cmd" , &ctrlRoller);
 void setup() {
     nh.initNode();
     nh.subscribe(sub);
-//  Serial.begin(115200);
+    Serial.begin(115200);
   
   motor0.begin(0);//motor1をモーター1として使用
   motor1.begin(1);//motor2をモーター2として使用
@@ -78,13 +79,22 @@ void ctrlRoller(const abu2022_msgs::R1ArduinoCmd &cmd)
 {
   if (cmd.actuator_id == RollerMotorR)
   {
-    motor0.put(cmd.value);
+//      motor0 << cmd.value;
+      motor0.put(cmd.value);
+      send_flag |= 0b00000001;
+//    Cubic::send();
 //    Serial.println(cmd.value);
   }
   else if (cmd.actuator_id == RollerMotorL)
   {
-    motor1.put(cmd.value);
+//      motor1 << cmd.value;
+      motor1.put(cmd.value);
+      send_flag |= 0b00000010;
+//    Cubic::send();
   }
-
-  Cubic::send();
+  if(send_flag == 0b00000011)
+  {
+      Cubic::send();
+      send_flag = 0;
+  }
 }

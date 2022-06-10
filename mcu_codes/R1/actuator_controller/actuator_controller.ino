@@ -3,7 +3,7 @@
 #include <abu2022_msgs/R1ArduinoData.h>
 #include "Actuator.h"
 
-#define TOUCH_SENS 8 //タッチセンサが接続させたピン
+#define TOUCH_SENS 8 //タッチセンサが接続されたピン
 #define PID_PERIOD 10 //PID制御周期。単位はms
 
 void onReceiveCmd(const abu2022_msgs::R1ArduinoCmd &);
@@ -152,12 +152,12 @@ void dataSender(const CustomDataStrageStructure::List<long> &result_v)
     //*(itr++)はエラーとなる。多分評価順序とかの問題かと。
     CustomDataStrageStructure::List<long>::Iterator itr = result_v.begin();
     
-    for(int i=0; i<2; i++) itr++;
+//    for(int i=0; i<2; i++) itr++;
     ard_data.lift_motor_angle = *itr;    //lift motorの角度データをard_dataに渡す
     
     itr++;
     ard_data.load_motor_angle = *itr;    //load motorの角度データをard_dataに渡す
-    ard_data.lift_motor_sw = digitalRead(TOUCH_SENS);
+    ard_data.lift_motor_sw = !digitalRead(TOUCH_SENS);
 //    ard_data.lift_motor_angle = *itr;
 //    itr++;
 //    ard_data.load_motor_angle = *itr;
