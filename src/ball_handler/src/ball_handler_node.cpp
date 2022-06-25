@@ -10,7 +10,11 @@ class BallHandler
 private:
     enum Actuators
     {
-        AIR_CYLINDER_EXPAND = 0,
+        ARM_MOTOR = 0,
+        MOVABLE_RAIL_MOTOR,
+        AIR_CYLINDER_HAND,
+        AIR_CYLINDER_ROT,
+        AIR_CYLINDER_EXPAND,
         AIR_CYLINDER_LIFT,
         AIR_CYLINDER_CATCH,
         MOTOR_BOH,
@@ -51,7 +55,7 @@ private:
 
     ros::Publisher cmd_pub_;
     ros::Subscriber joy_sub_;
-    ros::Duration dura_;
+    ros::Duration dura_, duras_;
     ros::Timer boh_timer_;
     // ros::Subscriber omni_sub_;
     std_msgs::Int16MultiArray cmd_msg_;
@@ -85,6 +89,7 @@ private:
         cmd_msg_.data[COMMAND] = val;
         //2度送るのは、1度だけだとマイコンまで届かないことが稀にあるため
         cmd_pub_.publish(cmd_msg_);
+        // duras_.sleep();
         cmd_pub_.publish(cmd_msg_);
     }
 
@@ -260,7 +265,7 @@ public:
     }
 
     BallHandler(ros::NodeHandle &nh)
-    : dura_(0.5), role_flag_(HITTER) //role_flag_の初期値はHITTER
+    : dura_(0.5), duras_(0.001), role_flag_(HITTER) //role_flag_の初期値はHITTER
     {
         double boh_speed_change_period;
 
@@ -276,7 +281,8 @@ public:
         //boost::bind(pointer of member function, reference to instance, args...)
         ops_joy.template initByFullCallbackType<sensor_msgs::Joy::ConstPtr>("joy", 10, boost::bind(&BallHandler::joyCb, this, _1));
         ops_joy.allow_concurrent_callbacks = true;
-        cmd_pub_ = nh.advertise<std_msgs::Int16MultiArray>("ball_handler_cmd", 100);
+        // cmd_pub_ = nh.advertise<std_msgs::Int16MultiArray>("ball_handler_cmd", 100);
+        cmd_pub_ = nh.advertise<std_msgs::Int16MultiArray>("integrated_cmd", 100);
         //joy_sub_ = nh.subscribe("joy", 10, &BallHandler::joyCb, this);
         joy_sub_ = nh.subscribe(ops_joy);
         // omni_sub_ = nh.subscribe("omni_info", 100, &OmniCommander::omniCb, this);

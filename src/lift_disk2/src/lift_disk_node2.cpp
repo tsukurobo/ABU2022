@@ -77,7 +77,7 @@ private:
     ros::Subscriber joy_sub_, ard_sub_;
     //only one thread can access ard_cmd_ at the same time because of the mutex
     std_msgs::Int16MultiArray ard_cmd_;
-    ros::Duration *dura_[2];
+    ros::Duration *dura_[2], duras_;
 
     //origin and direction of displacement:
     //arm -> top, downward
@@ -134,6 +134,7 @@ private:
         ard_cmd_.data[COMMAND] = val;
 
         pub_.publish(ard_cmd_);
+        // duras_.sleep();
         pub_.publish(ard_cmd_);
     }
 
@@ -553,9 +554,11 @@ public:
     }
 
     LiftDisk2(ros::NodeHandle &nh)
+    : duras_(0.001)
     {
         //initialize publisher and subscriber
-        pub_ = nh.advertise<std_msgs::Int16MultiArray>("liftdisk2_cmd", 100);
+        // pub_ = nh.advertise<std_msgs::Int16MultiArray>("liftdisk2_cmd", 100);
+        pub_ = nh.advertise<std_msgs::Int16MultiArray>("integrated_cmd", 100);
 
         ros::SubscribeOptions ops_joy;
         //boost::bind(pointer of member function, reference or pointer of the instance, args...)
@@ -563,7 +566,7 @@ public:
         ops_joy.allow_concurrent_callbacks = true;
         //joy_sub_ = nh.subscribe("joy", 100, &Shooter2::joyCb, this);
         joy_sub_ = nh.subscribe(ops_joy);
-        ard_sub_ = nh.subscribe("liftdisk2_data", 100, &LiftDisk2::arduinoCb, this);
+        ard_sub_ = nh.subscribe("integrated_data", 100, &LiftDisk2::arduinoCb, this);
 
         ard_cmd_.data.resize(2);
         

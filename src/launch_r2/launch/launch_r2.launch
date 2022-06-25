@@ -1,5 +1,5 @@
 <launch>
-    <arg name="omni"        default="true"/>
+    <arg name="omni"        default="false"/>
     <arg name="disc"        default="true"/>
     <arg name="ball_handler"        default="true"/>
 
@@ -39,10 +39,10 @@
         <!-- <rosparam command="load" file="$(find ball_handler)/config/params.yaml"/> -->
         <node name="ball_handler" type="ball_handler_node" pkg="ball_handler" output="screen"/>
         
-        <node name="ball_handler_arduino" type="serial_node.py" pkg="rosserial_python" output="screen">
+        <!-- <node name="ball_handler_arduino" type="serial_node.py" pkg="rosserial_python" output="screen">
             <param name="port" value="/dev/arduino_ball"/>
             <param name="baud" value="115200" />
-        </node>
+        </node> -->
     </group>
 
 </launch>
